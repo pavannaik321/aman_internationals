@@ -1,11 +1,13 @@
 "use client";
 import { useRoomFilter } from "@/store/useRoomFilter";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import HomeRoomView from "./HomeRoomView";
 import BookingConfirmation from "./BookUsers";
 import CustomerCard from "./ViewCustomer";
-
+import { BookingData } from "@/app/checkdata/page";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../../lib/firebaseConfig";
 const roomData: {
   date: Date;
   rooms: {
@@ -320,6 +322,17 @@ const roomData: {
   ],
 };
 
+type CleanBookingData = {
+  amountpaid: number;
+  bookingstatus: string;
+  checkinstatus: boolean;
+  checkintime: string;  // ISO string
+  checkouttime: string; // ISO string
+  roomnumber: number;
+  roomtype: string;     // Document ID or path
+  totalamount: number;
+  user_id: string;      // Document ID or path
+};
 type RoomStatus = 'available' | 'booked' | 'booked_not_checked_in';
 const statusColor: Record<RoomStatus, string> = {
   available: "bg-green-400",
@@ -351,9 +364,12 @@ export default function RoomGrid() {
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [bookRoom, setBookRoom] = useState<Room | null>(null);
   const [selectedUser,setSelectedUser] = useState<Room | null>(null);
+  const [bookings, setBookings] = useState<CleanBookingData[] | null>(null);
+const { date, category, shouldFetch } = useRoomFilter();
 
-  const { category } = useRoomFilter();
+
 const filteredRooms = roomData.rooms.filter((group) => {
+  // console.log("data : ", date)
   const categoryMatch =
     category.toLowerCase() === "all category rooms" || // fix here
     group.category.toLowerCase() === category.toLowerCase();
@@ -361,11 +377,62 @@ const filteredRooms = roomData.rooms.filter((group) => {
   return categoryMatch;
 });
 
+const getBookingsByDate = async (
+  date: string
+): Promise<CleanBookingData[] | null> => {
+  try {
+    const roomDateRef = doc(db, "room_dates", date);
+    const roomDateSnap = await getDoc(roomDateRef);
+
+    if (roomDateSnap.exists()) {
+      const data = roomDateSnap.data();
+      const rawBookings = data.bookings as BookingData[];
+
+      const cleanedBookings: CleanBookingData[] = rawBookings.map((b) => ({
+        amountpaid: b.amountpaid,
+        bookingstatus: b.bookingstatus,
+        checkinstatus: b.checkinstatus,
+        checkintime: b.checkintime.toDate().toISOString(),
+        checkouttime: b.checkouttime.toDate().toISOString(),
+        roomnumber: b.roomnumber,
+        totalamount: b.totalamount,
+        roomtype: b.roomtype?.id || b.roomtype?.path || "unknown",
+        user_id: b.user_id?.id || b.user_id?.path || "unknown",
+      }));
+
+      return cleanedBookings;
+    } else {
+      console.log("No bookings found for this date.");
+      return null;
+    }
+  } catch (error) {
+    console.error("Error fetching bookings:", error);
+    return null;
+  }
+};
+
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const formattedDate = date.toISOString().split("T")[0];
+      const bookingsData = await getBookingsByDate(formattedDate);
+      setBookings(bookingsData);
+    };
+
+    fetchData();
+    console.log(bookings)
+  }, [shouldFetch]); 
+
+
     if (filteredRooms.length === 0) {
   return <div className="p-6 text-red-600">No rooms found for the selected filters.</div>;
 }
   return (
     <div className="grid grid-cols-4 gap-6 p-6">
+       <div>
+      <h2 className="text-xl">Bookings for {date.toDateString()}</h2>
+      <p>{JSON.stringify(bookings, null, 2)}</p>
+    </div>
       {filteredRooms.map((group, idx) => (
         <div key={idx}>
           <h2 className="text-center font-bold text-gray-800 mb-4">{group.category}</h2>

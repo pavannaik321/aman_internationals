@@ -3,6 +3,22 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../../../lib/firebaseConfig";
 import { collection, addDoc, getDocs } from "firebase/firestore";
+import { Timestamp, doc } from "firebase/firestore";
+import {  DocumentReference } from "firebase/firestore";
+
+import {  getDoc, setDoc, updateDoc, arrayUnion } from "firebase/firestore";
+export interface BookingData {
+  amountpaid: number;
+  bookingstatus: string;
+  checkinstatus: boolean;
+  checkintime: Timestamp;
+  checkouttime: Timestamp;
+  roomnumber: number;
+  roomtype: DocumentReference;
+  totalamount: number;
+  user_id: DocumentReference;
+}
+
 
 interface User {
   id: string;
@@ -148,6 +164,8 @@ const roomData: {
 
 
 export default function UsersPage() {
+
+  
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -221,6 +239,51 @@ const addRoomTypesToFirestore = async () => {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  const booking :BookingData= {
+  amountpaid: 1000,
+  bookingstatus: "booked",
+  checkinstatus: true,
+  checkintime: Timestamp.fromDate(new Date("2025-06-01T13:30:00+05:30")),
+  checkouttime: Timestamp.fromDate(new Date("2025-06-02T13:30:00+05:30")),
+  roomnumber: 302,
+  roomtype: doc(db, "roomtypes", "IEEUNkZU0Q0K8OLlyysC"),
+  totalamount: 2000,
+  user_id: doc(db, "users", "fYrhdziZTDZkn17xeaWc"),
+};
+
+const addBookingToDate = async (
+  date: string, // format: "2025-06-01"
+  booking: BookingData
+) => {
+  try {
+    const dateDocRef = doc(db, "room_dates", date);
+    const docSnap = await getDoc(dateDocRef);
+
+    if (docSnap.exists()) {
+      // Document exists, update bookings array
+      await updateDoc(dateDocRef, {
+        bookings: arrayUnion(booking),
+      });
+    } else {
+      // Document does not exist, create with bookings array
+      await setDoc(dateDocRef, {
+        bookings: [booking],
+      });
+    }
+
+    alert("Booking added successfully!");
+  } catch (error) {
+    console.error("Error adding booking:", error);
+    alert("Failed to add booking.");
+  }
+};
+
+
+
+
+
+
 
   return (
     <div className="p-10">
@@ -298,6 +361,12 @@ const addRoomTypesToFirestore = async () => {
           className="bg-green-600 text-white px-4 py-2 rounded cursor-pointer"
         >
           Add User
+        </button>
+              <button
+          onClick={() => addBookingToDate("2025-06-06", booking)}
+          className="bg-green-600 text-white px-4 py-2 rounded cursor-pointer"
+        >
+          Add room
         </button>
     </div>
   );

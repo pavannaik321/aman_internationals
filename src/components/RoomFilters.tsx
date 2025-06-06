@@ -7,7 +7,7 @@ import { useRoomFilter } from "@/store/useRoomFilter";
 
 
 export default function RoomFilters() {
-    const { setFilters } = useRoomFilter();
+    const { setFilters,triggerFetch } = useRoomFilter();
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [bulkBooking, setBulkBooking] = useState(true);
     // const [room_type_open, setRoom_type_open] = useState(false);
@@ -194,14 +194,17 @@ export default function RoomFilters() {
                 </label>
 
                 {/* Buttons 1*/}
-                <button className="bg-gray-700 text-white px-4 py-2 rounded-md text-sm hover:bg-gray-800"  onClick={() =>
-    setFilters({
-      date: selectedDate,
-    //   roomType: room_type,
-      category,
-      numberOfRooms: no_of_room,
-      bulkBooking,
-    })
+                <button className="bg-gray-700 text-white px-4 py-2 rounded-md text-sm hover:bg-gray-800"  onClick={() =>{
+
+                setFilters({
+    date: selectedDate,
+    category,
+    numberOfRooms: no_of_room,
+    bulkBooking,
+  });
+
+  triggerFetch();
+                }
   }>
                     Search Rooms
                 </button>

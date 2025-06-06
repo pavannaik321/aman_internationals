@@ -1,6 +1,8 @@
 "use client"
 import React, { useRef, useState } from "react";
 import { FiSearch, FiX } from "react-icons/fi";
+// import { doc, getDoc } from "firebase/firestore";
+// import { db } from "../../lib/firebaseConfig";
 import {
   MdAcUnit,
   MdTv,
@@ -15,6 +17,13 @@ import {
   MdFreeBreakfast,
   MdOutlinePets,
 } from "react-icons/md";
+import { Room } from "./RoomCards";
+import { useRouter } from "next/navigation";
+// import { useSearchParams } from "next/navigation";
+interface EditRoomsDataSectionProps {
+  data: Room;
+  onSave: (updatedRoom: Room) => void;
+}
 
 const allAmenities = [
   { name: "Parking", icon: <MdLocalParking /> },
@@ -33,12 +42,32 @@ const allFacilities = [
   { name: "Kettle", icon: <MdOutlineLocalCafe /> },
   { name: "Wi-Fi", icon: <MdWifi /> },
 ];
-export default function EditRoomsDataSection() {
-  const [selectedFacilities, setselectedFacilities] = useState<string[]>(["Wi-Fi", "Air-Conditioning"]);
+// interface Room {
+//   id: string;
+//   category_id: string;
+//   category: string;
+//   single_price: number;
+//   people: number;
+//   days: number;
+//   images: string[];
+//   facilities: string[];
+// }
+export default function EditRoomsDataSection( {data,onSave} : EditRoomsDataSectionProps) {
+    // const searchParams = useSearchParams();
+  // const categoryId = searchParams.get("category");
+    const router = useRouter();
+  const [selectedFacilities, setselectedFacilities] = useState<string[]>(data.facilities);
   const [searchFacilities, setsearchFacilities] = useState("");
-  const [selectedAmenity, setSelectedAmenity] = useState<string[]>(["Parking", "Swimming Pool"]);
+  const [selectedAmenity, setSelectedAmenity] = useState<string[]>(data.amenities);
   const [searchAmenity, setSearchAmenity] = useState("");
-
+const [category, setCategory] = useState(data.category);
+const [roomSize, setRoomSize] = useState(data.room_size);
+const [tariff, setTariff] = useState(data.tariff);
+const [gst, setGst] = useState(data.gst);
+const [singlePrice, setSinglePrice] = useState(data.single_price);
+const [doublePrice, setDoublePrice] = useState(data.double_price);
+const [triplePrice, setTriplePrice] = useState(data.triple_price);
+const [quadPrice, setQuadPrice] = useState(data.quad_price);
 
   const addFacility = (name: string) => {
     if (!selectedFacilities.includes(name)) {
@@ -61,9 +90,6 @@ export default function EditRoomsDataSection() {
     allFacilities.find((f) => f.name === name)?.icon;
 
   const [images, setImages] = useState([
-    "rooms/img1.png",
-    "rooms/img1.png",
-    "rooms/img1.png",
     "rooms/img1.png",
   ]);
 const fileInputRef = useRef<HTMLInputElement>(null);
@@ -123,10 +149,11 @@ const fileInputRef = useRef<HTMLInputElement>(null);
       <div className="grid grid-cols-4 gap-4 text-sm">
         {/* Room Name */}
         <div>
-          <label className="block mb-1 text-gray-500">Room Name</label>
+          <label className="block mb-1 text-gray-500">Standard Ac</label>
           <input
             type="text"
-            defaultValue="Standard Plus A/C"
+              value={category}
+  onChange={(e) => setCategory(e.target.value)}
             className="w-full border border-gray-400 text-gray-600 rounded px-3 py-2"
           />
         </div>
@@ -137,7 +164,8 @@ const fileInputRef = useRef<HTMLInputElement>(null);
           <div className="flex">
             <input
               type="text"
-              defaultValue="310"
+                           value={roomSize}
+  onChange={(e) => setRoomSize(e.target.value)}
               className="w-2/3 border border-gray-400 text-gray-600 rounded-l px-3 py-2"
             />
             <span className="w-1/3 border border-gray-400 text-gray-600 border-l-0 rounded-r px-3 py-2 flex items-center justify-center">
@@ -151,7 +179,9 @@ const fileInputRef = useRef<HTMLInputElement>(null);
           <label className="block mb-1 text-gray-500">Tariff Include</label>
           <input
             type="text"
-            defaultValue="12 %"
+                         value={tariff}
+onChange={(e) => setTariff(Number(e.target.value) || 0)}
+
             className="w-full border border-gray-400 text-gray-600 rounded px-3 py-2"
           />
         </div>
@@ -161,7 +191,8 @@ const fileInputRef = useRef<HTMLInputElement>(null);
           <label className="block mb-1 text-gray-500">GST Include</label>
           <input
             type="text"
-            defaultValue="18 %"
+                                     value={gst}
+onChange={(e) => setGst(Number(e.target.value) || 0)}
             className="w-full border border-gray-400 text-gray-600 rounded px-3 py-2"
           />
         </div>
@@ -171,7 +202,8 @@ const fileInputRef = useRef<HTMLInputElement>(null);
           <label className="block mb-1 text-gray-500">Single Price</label>
           <input
             type="text"
-            defaultValue="Rs 2,800"
+                                     value={singlePrice}
+onChange={(e) => setSinglePrice(Number(e.target.value) || 0)}
             className="w-full border border-gray-400 text-gray-600 rounded px-3 py-2"
           />
         </div>
@@ -181,7 +213,8 @@ const fileInputRef = useRef<HTMLInputElement>(null);
           <label className="block mb-1 text-gray-500">Double Price</label>
           <input
             type="text"
-            defaultValue="Rs 3,600"
+                                     value={doublePrice}
+onChange={(e) => setDoublePrice(Number(e.target.value) || 0)}
             className="w-full border border-gray-400 text-gray-600 rounded px-3 py-2"
           />
         </div>
@@ -191,7 +224,8 @@ const fileInputRef = useRef<HTMLInputElement>(null);
           <label className="block mb-1 text-gray-500">Triple Price</label>
           <input
             type="text"
-            defaultValue="N/A"
+                         value={triplePrice}
+onChange={(e) => setTriplePrice(Number(e.target.value) || 0)}
             className="w-full border border-gray-400 text-gray-600 rounded px-3 py-2"
           />
         </div>
@@ -201,7 +235,8 @@ const fileInputRef = useRef<HTMLInputElement>(null);
           <label className="block mb-1 text-gray-500">Quad Price</label>
           <input
             type="text"
-            defaultValue="N/A"
+                                     value={quadPrice}
+onChange={(e) => setQuadPrice(Number(e.target.value) || 0)}
             className="w-full border border-gray-400 text-gray-600 rounded px-3 py-2"
           />
         </div>
@@ -371,7 +406,58 @@ const fileInputRef = useRef<HTMLInputElement>(null);
             )}
           </div>
         </div>
+
+
       </div>
+<div className="flex justify-center">
+  <button
+    onClick={() => {
+   const updatedRoom: Room = {
+  ...data,
+  category,
+  room_size: roomSize,
+  tariff,
+  gst,
+  single_price: singlePrice,
+  double_price: doublePrice,
+  triple_price: triplePrice,
+  quad_price: quadPrice,
+  facilities: selectedFacilities,
+  amenities: selectedAmenity,
+  images: images,
+};
+
+const isChanged =
+  category !== data.category ||
+  roomSize !== data.room_size ||
+  tariff !== data.tariff ||
+  gst !== data.gst ||
+  singlePrice !== data.single_price ||
+  doublePrice !== data.double_price ||
+  triplePrice !== data.triple_price ||
+  quadPrice !== data.quad_price ||
+  JSON.stringify(data.facilities) !== JSON.stringify(updatedRoom.facilities) ||
+  JSON.stringify(data.amenities) !== JSON.stringify(updatedRoom.amenities) ||
+  JSON.stringify(data.images) !== JSON.stringify(updatedRoom.images);
+
+if (isChanged) {
+  onSave(updatedRoom);
+   router.push(`/rooms`);
+} else {
+  alert("No changes to save.");
+}
+
+   
+   
+    }
+  
+  }
+    className="bg-black w-1/2 text-white px-6 py-2 rounded font-semibold hover:bg-gray-700 mt-10"
+  >
+    Save Edit
+  </button>
+</div>
+
     </div>
   );
 }

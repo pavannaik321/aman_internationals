@@ -9,17 +9,33 @@ import {
     Tv,
     GlassWater,
     PillBottle,
-    Bell
-} from "lucide-react"; // You can add more from https://lucide.dev/icons
+    Bell,
+    // Additional icons for new amenities
+    ParkingCircleIcon,
+    ShowerHead,
+    Dumbbell,
+    BathIcon,
+    Coffee,
+    Dog
+} from "lucide-react";
+import { Room } from "./RoomCards";
 
-// amenities icons
 const amenityIcons: {
     [key: string]: React.ComponentType<React.SVGProps<SVGSVGElement>>;
 } = {
     "Soap": SoapDispenserDroplet,
     "Shampoo": LucideSoapDispenserDroplet,
     "Dental Kit": Brush,
+
+    // Added amenities
+    "Parking": ParkingCircleIcon,
+    "Swimming Pool": BathIcon,
+    "Gym": Dumbbell,
+    "Spa": ShowerHead,
+    "Breakfast": Coffee,
+    "Pet Friendly": Dog,
 };
+
 
 // List of facilities
 const facilitiesIcons: {
@@ -32,11 +48,11 @@ const facilitiesIcons: {
     "Room Service": Bell,
 };
 
-const amineties: string[] = ["Soap", "Shampoo", "Dental Kit"]
-const facilities: string[] = ["Air-Conditioning", "Cable TV", "Kettle", "Water bottle", "Room Service"];
+// const amineties: string[] = ["Soap", "Shampoo", "Dental Kit"]
+// const facilities: string[] = ["Air-Conditioning", "Cable TV", "Kettle", "Water bottle", "Room Service"];
 
 
-export default function RoomView() {
+export default function RoomView(data:Room) {
 
     return (
         <div className="w-full mx-auto p-4 shadow-md rounded-2xl">
@@ -64,8 +80,8 @@ export default function RoomView() {
                 {/* Right: Room Info */}
                 <div className="space-y-4">
                     <div className="flex justify-between items-center bg-gray-100 p-4 rounded-lg">
-                        <h2 className="text-xl font-semibold">Standard Plus A/C</h2>
-                        <span className="text-lg font-medium text-gray-600">310 Sq</span>
+                        <h2 className="text-xl font-semibold">{data.category}</h2>
+                        <span className="text-lg font-medium text-gray-600">{data.room_size} Sq</span>
                     </div>
 
                     {/* Facilities and Amenities */}
@@ -73,7 +89,7 @@ export default function RoomView() {
                         <div className="bg-gray-100 p-4 rounded-lg">
                             <h3 className="font-medium mb-2">Facilities</h3>
                             <div className="flex flex-wrap gap-2">
-                                {facilities.map((item) => {
+                                {data.facilities.map((item) => {
                                     const Icon = facilitiesIcons[item];
                                     return (
                                         <span
@@ -91,7 +107,7 @@ export default function RoomView() {
                         <div className="bg-gray-100 p-4 rounded-lg">
                             <h3 className="font-medium mb-2">Amenities</h3>
                             <div className="flex flex-wrap gap-2">
-                                {amineties.map((item) => {
+                                {data.amenities.map((item) => {
                                     const Icon = amenityIcons[item];
                                     return (
                                         <span
@@ -121,11 +137,11 @@ export default function RoomView() {
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td className="px-4 py-2 border border-gray-300">Rs 2,800</td>
-                                    <td className="px-4 py-2 border border-gray-300">Rs 3,360</td>
-                                    <td className="px-4 py-2 border border-gray-300 text-gray-400">N/A</td>
-                                    <td className="px-4 py-2 border border-gray-300 text-gray-400">N/A</td>
-                                    <td className="px-4 py-2 border border-gray-300">Rs 500</td>
+                                    <td className="px-4 py-2 border border-gray-300">Rs {data.single_price==0?"NA":data.single_price}</td>
+                                    <td className="px-4 py-2 border border-gray-300">Rs {data.double_price==0?"NA":data.double_price}</td>
+                                    <td className="px-4 py-2 border border-gray-300">Rs {data.triple_price==0?"NA":data.triple_price}</td>
+                                    <td className="px-4 py-2 border border-gray-300">Rs {data.quad_price==0?"NA":data.quad_price}</td>
+                                    <td className="px-4 py-2 border border-gray-300">Rs {data.pax}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -141,7 +157,7 @@ export default function RoomView() {
                                 {/* Vertical Line */}
                                 <div className="w-px h-4 bg-gray-300" />
 
-                                <span>12%</span>
+                                <span>{data.tariff}%</span>
                             </div>
 
                             <div className="flex items-center gap-2 px-2 py-1 bg-white rounded text-sm">
@@ -150,7 +166,7 @@ export default function RoomView() {
                                 {/* Vertical Line */}
                                 <div className="w-px h-4 bg-gray-300" />
 
-                                <span>18%</span>
+                                <span>{data.gst}%</span>
                             </div>
 
                             <div className="flex items-center gap-2 px-2 py-1 bg-white rounded text-sm">
@@ -159,7 +175,7 @@ export default function RoomView() {
                                 {/* Vertical Line */}
                                 <div className="w-px h-4 bg-gray-300" />
 
-                                <span>12%</span>
+                                <span>{data.tariff}%</span>
                             </div>
 
                         </div>
