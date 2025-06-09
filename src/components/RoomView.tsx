@@ -1,5 +1,5 @@
 // RoomCard.tsx
-import Image from "next/image";
+
 
 import {
     SoapDispenserDroplet,
@@ -19,6 +19,11 @@ import {
     Dog
 } from "lucide-react";
 import { Room } from "./RoomCards";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Pagination, Autoplay } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/pagination";
+
 
 const amenityIcons: {
     [key: string]: React.ComponentType<React.SVGProps<SVGSVGElement>>;
@@ -58,24 +63,25 @@ export default function RoomView(data:Room) {
         <div className="w-full mx-auto p-4 shadow-md rounded-2xl">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Left: Room Image */}
-                <div className="rounded-xl overflow-hidden">
-                    <Image
-                        src="/rooms/img1.png" // Replace with actual image path
-                        alt="Room"
-                        width={500}
-                        height={300}
-                        className="object-cover w-full h-full"
-                    />
-                    {/* Image pagination indicators (fake for UI) */}
-                    <div className="flex justify-center mt-2 space-x-2">
-                        {Array.from({ length: 5 }).map((_, idx) => (
-                            <div
-                                key={idx}
-                                className={`w-3 h-3 rounded-full ${idx === 0 ? "bg-black" : "bg-gray-300"}`}
-                            />
-                        ))}
-                    </div>
-                </div>
+                 <div className="rounded-xl overflow-hidden">
+      <Swiper
+        modules={[Pagination, Autoplay]}
+        pagination={{ clickable: true }}
+        autoplay={{ delay: 3000 }}
+        loop={true}
+        className="w-full h-116"
+      >
+        {data.images.map((img, idx) => (
+          <SwiperSlide key={idx}>
+            <img
+              src={img}
+              alt={`Room ${idx + 1}`}
+              className="object-cover w-full h-full"
+            />
+          </SwiperSlide>
+        ))}
+      </Swiper>
+    </div>
 
                 {/* Right: Room Info */}
                 <div className="space-y-4">

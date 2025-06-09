@@ -1,16 +1,15 @@
-import DateCard from "@/components/DateCard";
+"use client"
+import RoomFilters from '@/components/RoomFilters'
+// import RoomGridDummy from '@/components/RoomGridDummy'
+import RoomGrid from '@/components/RoomGrid'
+import React from 'react'
 
-import OverviewStats from "@/components/OverviewStats";
-import RoomDetails from "@/components/RoomDetails";
-
-
-export default function Home() {
+export default function page() {
   return (
-    <>
-
-<DateCard />
-<OverviewStats />
-<RoomDetails />
-    </>
-  );
+    <div>
+<RoomFilters />
+<RoomGrid />
+{/* <RoomGridDummy /> */}
+    </div>
+  )
 }

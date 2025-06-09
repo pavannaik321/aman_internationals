@@ -6,9 +6,10 @@ import HomeRoomView from "./HomeRoomView";
 import BookingConfirmation from "./BookUsers";
 // import CustomerCard from "./ViewCustomer";
 import { BookingData } from "@/app/checkdata/page";
-import { doc, getDoc, Timestamp } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, Timestamp } from "firebase/firestore";
 import { db } from "../../lib/firebaseConfig";
-import CustomerCard from "./ViewCustomer";
+
+import ViewCheckInCustomer from "./ViewCheckInCustomer";
 const OriginalRoomData: {
   date: Date;
   rooms: {
@@ -164,16 +165,6 @@ export interface Room {
   checkouttime?: string;
 }
 
-// interface CustomerInfo {
-//   name: string;
-//   phone: string;
-//   idProof: string;
-//   checkInTime: string;
-//   checkOutTime: string;
-//   totalAmount: number;
-//   paidAmount: number;
-//   bookingDate: Date;
-// }
 
 function convertToIST(dateInput: Date | Timestamp): string {
   // Convert Firebase Timestamp to JS Date if needed
@@ -241,6 +232,9 @@ export default function CheckinRoomGrid() {
   const [selectedUser, setSelectedUser] = useState<Room | null>(null);
   const [bookings, setBookings] = useState<CleanBookingData[] | null>(null);
   const todaysdate = new Date();
+  const [phoneInput, setPhoneInput] = useState("");
+const [searchedUserId, setSearchedUserId] = useState<string | null>(null);
+
   const [currentDate, setCurrentDate] = useState<string>(todaysdate.toLocaleDateString("en-CA"));
   const [updatedbookings, setUpdatedBookings] = useState<{
     date: Date;
@@ -252,14 +246,30 @@ export default function CheckinRoomGrid() {
   const { date, category } = useRoomFilter();
 
 
-  const filteredRooms = updatedbookings?.rooms.filter((group) => {
-    // console.log("data : ", date)
+const filteredRooms = updatedbookings?.rooms
+  .filter((group) => {
     const categoryMatch =
-      category.toLowerCase() === "all category rooms" || // fix here
+      category.toLowerCase() === "all category rooms" ||
       group.category.toLowerCase() === category.toLowerCase();
 
     return categoryMatch;
-  });
+  })
+  .map((group) => {
+    const filteredRoomList = group.rooms.filter((room) => {
+      // Only apply phone filter if search is active
+      if (searchedUserId) {
+        return room?.customerData === searchedUserId;
+      }
+      return true; // No search → include all
+    });
+
+    return {
+      ...group,
+      rooms: filteredRoomList,
+    };
+  })
+  .filter((group) => group.rooms.length > 0); // remove empty groups
+
 
   const getBookingsByDate = async (
     date: string
@@ -294,33 +304,96 @@ export default function CheckinRoomGrid() {
       return null;
     }
   };
+const handlePhoneSearch = async () => {
+  if (!phoneInput) return;
+
+  try {
+    const usersSnapshot = await getDocs(collection(db, "users"));
+    const matchingUser = usersSnapshot.docs.find(
+      (doc) => doc.data().phone === phoneInput
+    );
+
+    if (matchingUser) {
+      setSearchedUserId(matchingUser.id);
+    } else {
+      alert("No user found with this phone number.");
+      setSearchedUserId(null);
+    }
+  } catch (error) {
+    console.error("Error searching user by phone:", error);
+    setSearchedUserId(null);
+  }
+};
+
 
 
   useEffect(() => {
-    const newdate = date.toLocaleDateString("en-CA");
-    setCurrentDate(newdate)
-    const fetchData = async () => {
-      const formattedDate = date.toLocaleDateString("en-CA");
-      const bookingsData = await getBookingsByDate(formattedDate);
-      setBookings(bookingsData);
-      if (bookings) {
-        const updatedRoomData = mergeRoomDataWithBookings(roomData, bookings);
-        setUpdatedBookings(updatedRoomData)
-      } else {
-        setUpdatedBookings(OriginalRoomData)
-      }
-    };
+  const now = new Date();
+  // Create a Date object for today at 1:30 PM
+  const todayAtOneThirty = new Date(now);
+  todayAtOneThirty.setHours(13, 30, 0, 0);
 
-    fetchData();
-    console.log(bookings)
-    console.log(updatedbookings)
-  }, [bookings, date, updatedbookings]);
+  // Determine the target date for booking fetch
+  const effectiveDate = now >= todayAtOneThirty ? date : new Date(date.getTime() - 24 * 60 * 60 * 1000); // If before 1:30 PM, use previous day
 
+  const formattedDate = effectiveDate.toLocaleDateString("en-CA");
+  setCurrentDate(formattedDate);
+
+  const fetchData = async () => {
+    const bookingsData = await getBookingsByDate(formattedDate);
+    setBookings(bookingsData);
+
+    if (bookings) {
+      const updatedRoomData = mergeRoomDataWithBookings(roomData, bookings);
+      setUpdatedBookings(updatedRoomData);
+    } else {
+      setUpdatedBookings(OriginalRoomData);
+    }
+  };
+
+  fetchData();
+}, [date,bookings,updatedbookings]);
 
   if (filteredRooms?.length === 0) {
     return <div className="p-6 text-red-600">No rooms found for the selected filters.</div>;
   }
   return (
+    <div>
+      {/* Filters */}
+       <div className="flex flex-col flex-wrap gap-8 items-center justify-between p-4">
+  <div className="flex flex-row items-center justify-between w-full gap-4">
+    <input
+      type="tel"
+      value={phoneInput}
+      onChange={(e) => setPhoneInput(e.target.value)}
+      placeholder="Enter Phone Number"
+      className="w-full max-w-xs px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+<div>
+{!searchedUserId && (
+    <button
+      className="bg-gray-700 text-white px-4 py-2 rounded-md text-sm hover:bg-gray-800"
+      onClick={handlePhoneSearch}
+    >
+      Search Rooms
+    </button>
+)}
+    {searchedUserId && (
+  <button
+    className="bg-gray-700 text-white px-4 py-2 rounded-md text-sm hover:bg-gray-800"
+    onClick={() => {
+      setSearchedUserId(null);
+      setPhoneInput("");
+    }}
+  >
+    Clear Filter
+  </button>
+)}
+</div>
+
+  </div>
+</div>
+
     <div className="grid grid-cols-4 gap-6 p-6">
       {filteredRooms?.map((group, idx) => (
         <div key={idx}>
@@ -334,7 +407,7 @@ export default function CheckinRoomGrid() {
                 <div className="flex items-center gap-4 p-2">
 
                   <div
-                    className={`w-12 h-12 rounded text-white font-bold flex items-center justify-center ${statusColor[room.status]}`}
+                    className={`w-12 h-12 rounded text-white font-bold flex items-center justify-center ${room.checkedin?statusColor["booked_not_checked_in"]:statusColor[room.status]}`}
                   >
                     {room.number}
                   </div>
@@ -364,7 +437,7 @@ export default function CheckinRoomGrid() {
                 </div>
                 {
                   (room.status == "booked") ? (
-                    <div className={`border-t border-black rounded-b-md text-center text-sm py-1 flex justify-evenly text-white ${statusColor[room.status]}`}>
+                    <div className={`border-t border-black rounded-b-md text-center text-sm py-1 flex justify-evenly text-white ${room.checkedin?statusColor["booked_not_checked_in"]:statusColor[room.status]}`}>
                       <div>{room.checkintime}</div>
                       <h2 className="text-black">|</h2>
                       <div>{room.checkouttime}</div>
@@ -407,11 +480,12 @@ export default function CheckinRoomGrid() {
         // style={{ boxShadow: '0 0 100px 30px rgba(0, 0, 0, 0.5)' }}
         >
 
-          <CustomerCard customerId={
+          <ViewCheckInCustomer customerId={
             selectedUser.customerData
-          } roomNumber={selectedUser.number} date={currentDate} onClose={() => setSelectedUser(null)} />
+          }  roomNumber={selectedUser.number} checkinStatus={selectedUser?.checkedin ?? false} date={currentDate} onClose={() => setSelectedUser(null)}  />
         </div>
       )}
+    </div>
     </div>
   );
 }

@@ -89,34 +89,45 @@ const [quadPrice, setQuadPrice] = useState(data.quad_price);
   const getFacilityIcon = (name: string) =>
     allFacilities.find((f) => f.name === name)?.icon;
 
-  const [images, setImages] = useState([
-    "rooms/img1.png",
-  ]);
+  const [images, setImages] = useState(data.images);
 const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleAddImage = () => {
-    fileInputRef.current?.click(); // Trigger the file input
-  };
- const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
+const handleAddImage = () => {
+  fileInputRef.current?.click();
+};
 
-    const fileArray = Array.from(files);
-    fileArray.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (reader.result) {
-          setImages((prev) => [...prev, reader.result as string]);
-        }
-      };
-      reader.readAsDataURL(file);
-    });
-  };
+const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const files = e.target.files;
+  if (!files) return;
 
-  const handleRemoveImage = (indexToRemove: number) => {
-    setImages(images.filter((_, index) => index !== indexToRemove));
-  };
+  const fileArray = Array.from(files);
 
+  for (const file of fileArray) {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "Aman_hotel"); // 🔁 Replace with actual preset
+
+    try {
+      const res = await fetch("https://api.cloudinary.com/v1_1/dobvt7cdb/image/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (data.secure_url) {
+        setImages((prev) => [...prev, data.secure_url]); // ✅ Adds uploaded image URL
+      } else {
+        console.error("Cloudinary error:", data);
+      }
+    } catch (error) {
+      console.error("Upload failed:", error);
+    }
+  }
+};
+
+const handleRemoveImage = (indexToRemove: number) => {
+  setImages((images) => images.filter((_, i) => i !== indexToRemove));
+};
 
   const addAmenity = (name: string) => {
     if (!selectedAmenity.includes(name)) {

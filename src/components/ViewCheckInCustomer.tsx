@@ -3,6 +3,10 @@
 import { useEffect, useState } from "react";
 import { doc, getDoc, DocumentReference, Timestamp } from "firebase/firestore";
 import { db } from "../../lib/firebaseConfig";
+import { updateDoc } from "firebase/firestore";
+
+
+
 
 interface CustomerData {
   name: string;
@@ -24,19 +28,62 @@ interface BookingData {
   roomtype: DocumentReference;
 }
 
-export default function CustomerCard({
+export default function ViewCheckInCustomer({
   customerId,
   roomNumber,
   date,
+  checkinStatus,
   onClose,
 }: {
   customerId: string;
   roomNumber: number;
   date: string;
+  checkinStatus:boolean
   onClose: () => void;
 }) {
   const [customer, setCustomer] = useState<CustomerData | null>(null);
   const [booking, setBooking] = useState<BookingData | null>(null);
+
+const handleCheckIn = async () => {
+  try {
+    const roomDateRef = doc(db, "room_dates", date);
+    const roomDateSnap = await getDoc(roomDateRef);
+
+    if (!roomDateSnap.exists()) {
+      console.error("Room date not found");
+      return;
+    }
+
+    const data = roomDateSnap.data();
+    const bookings: BookingData[] = data.bookings;
+
+    // Find the index of the matching booking
+    const bookingIndex = bookings.findIndex(
+      (b) => b.user_id.id === customerId && b.roomnumber === roomNumber
+    );
+
+    if (bookingIndex === -1) {
+      console.error("Booking not found");
+      return;
+    }
+
+    // Update the checkinstatus to true
+    bookings[bookingIndex].checkinstatus = true;
+
+    // Write the updated bookings back to Firestore
+    await updateDoc(roomDateRef, {
+      bookings: bookings,
+    });
+
+    // Update the local state
+    setBooking({ ...bookings[bookingIndex] });
+
+    alert("Check-in successful!");
+    onClose()
+  } catch (error) {
+    console.error("Error updating check-in status:", error);
+  }
+};
 
   useEffect(() => {
     const fetchCustomerAndBooking = async () => {
@@ -110,11 +157,22 @@ export default function CustomerCard({
   </div>
 
   {/* Footer */}
-  {/* <div className="mt-8">
-    <button className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl shadow-md transition">
-      Check-Out
-    </button>
-  </div> */}
+{
+  !checkinStatus && (
+    <div className="mt-8">
+      <button
+        className="w-full py-3 border border-red-600 hover:bg-red-700 text-white font-semibold rounded-xl shadow-md transition"
+        onClick={()=>{
+          handleCheckIn()
+
+        }}
+      >
+        Check-In
+      </button>
+    </div>
+  )
+}
+
 </div>
 
   );

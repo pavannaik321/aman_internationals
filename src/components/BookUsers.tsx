@@ -188,6 +188,7 @@ export default function BookUser({
   ) => {
     try {
       const dateDocRef = doc(db, "room_dates", date);
+      
       const docSnap = await getDoc(dateDocRef);
 
       if (docSnap.exists()) {
