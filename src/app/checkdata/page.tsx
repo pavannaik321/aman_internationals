@@ -246,7 +246,7 @@ const addRoomTypesToFirestore = async () => {
   checkinstatus: true,
   checkintime: Timestamp.fromDate(new Date("2025-06-01T13:30:00+05:30")),
   checkouttime: Timestamp.fromDate(new Date("2025-06-02T13:30:00+05:30")),
-  roomnumber: 302,
+  roomnumber: 401,
   roomtype: doc(db, "roomtypes", "IEEUNkZU0Q0K8OLlyysC"),
   totalamount: 2000,
   user_id: doc(db, "users", "fYrhdziZTDZkn17xeaWc"),

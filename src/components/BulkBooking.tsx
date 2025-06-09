@@ -15,6 +15,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { roomdatatype } from "./HomeRoomView";
+import { ChevronDown, ChevronRight } from "lucide-react";
 
 // import BookingConfirmation from "@/components/BookingConfirmation";
 export interface Room {
@@ -38,12 +39,12 @@ export interface BookingData {
 }
 
 type RoomStatus = 'available' | 'booked' | 'booked_not_checked_in';
-export default function BookUser({
+export default function BulkRoomBooking({
   room,
   date,
   onClose
 }: {
-  room: Room;
+  room: Room[];
   date: string;
   onClose: () => void;
 }
@@ -51,6 +52,10 @@ export default function BookUser({
 ) {
   // const [submited,setSubmitted] = useState(false);
   const [roomdata, setRoomdata] = useState<roomdatatype | null>(null);
+  const [filteredRoom , setFilteredRoom] = useState<Room[]|null>(null);
+  const [no_of_rooms_open, setNo_of_room_open] = useState(false);
+  const [no_of_room, setNo_of_room] = useState(2);
+  const [isAlreadyBulkBooked,setIsAlreadyBulkBooked] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -64,6 +69,7 @@ export default function BookUser({
     idtype: "",
     idnumber: "",
     address: "",
+    bulkName: "",
     gst: "",
     bookingDate: new Date()
   });
@@ -85,102 +91,128 @@ export default function BookUser({
     // setSubmitted(true);
 
   };
+const handleAddUser = async () => {
+  const {
+    name,
+    phone,
+    idtype,
+    idnumber,
+    address,
+    gst,
+    checkInDate,
+    checkInTime,
+    checkOutDate,
+    checkOutTime,
+    totalAmount,
+    paidAmount,
+    bulkName
+  } = formData;
 
-  const handleAddUser = async () => {
-    const {
+  if (
+    !name ||
+    !phone ||
+    !idnumber ||
+    !idtype ||
+    !address ||
+    !checkInDate ||
+    !checkInTime ||
+    !checkOutDate ||
+    !checkOutTime ||
+    !totalAmount ||
+    !bulkName
+  ) {
+    return alert("Please fill in all required fields.");
+  }
+
+  try {
+    // 1. Create the user doc
+    const userRef = doc(db, "users", phone);
+    await setDoc(userRef, {
       name,
       phone,
       idtype,
       idnumber,
+      gst: gst || null,
       address,
-      gst,
-      checkInDate,
-      checkInTime,
-      checkOutDate,
-      checkOutTime,
-      totalAmount,
-      paidAmount,
-    } = formData;
+      user_id: phone,
+      createdAt: new Date(),
+    });
 
-    if (
-      !name ||
-      !phone ||
-      !idnumber ||
-      !idtype ||
-      !address ||
-      !checkInDate ||
-      !checkInTime ||
-      !checkOutDate ||
-      !checkOutTime ||
-      !totalAmount
-    ) {
-      return alert("Please fill in all required fields.");
+    console.log("User added with phone ID:", phone);
+
+    const checkinTimestamp = Timestamp.fromDate(new Date(`${checkInDate}T${checkInTime}`));
+    const checkoutTimestamp = Timestamp.fromDate(new Date(`${checkOutDate}T${checkOutTime}`));
+
+    // 2. Loop through all available rooms
+    if (!filteredRoom) {
+      alert("No rooms selected for booking.");
+      return;
     }
-
-    try {
-      // Step 1: Create user with phone number as document ID
-      const userRef = doc(db, "users", phone);
-      await setDoc(userRef, {
-        name,
-        phone,
-        idtype,
-        idnumber,
-        gst: gst || null,
-        address,
-        user_id: phone,
-        createdAt: new Date(),
-      });
-
-      console.log("User added with phone ID:", phone);
-
-      const checkinTimestamp = Timestamp.fromDate(new Date(`${checkInDate}T${checkInTime}`));
-      const checkoutTimestamp = Timestamp.fromDate(new Date(`${checkOutDate}T${checkOutTime}`));
-
+    for (const r of filteredRoom) {
       const booking = {
         amountpaid: Number(paidAmount),
         bookingstatus: "booked",
         checkinstatus: false,
         checkintime: checkinTimestamp,
         checkouttime: checkoutTimestamp,
-        roomnumber: room.number,
-        roomtype: doc(db, "roomtypes", room.roomCategoryId),
+        roomnumber: r.number,
+        roomtype: doc(db, "roomtypes", r.roomCategoryId),
         totalamount: Number(totalAmount),
         user_id: userRef,
       };
 
-      // Step 2: Check availability for every date between check-in and check-out (exclusive)
+      // 3. Book room for each day in the stay range
       const startDate = new Date(checkInDate);
       const endDate = new Date(checkOutDate);
 
       for (let d = new Date(startDate); d < endDate; d.setDate(d.getDate() + 1)) {
-        const bookingDateKey = d.toISOString().split("T")[0];
-        const dateDocRef = doc(db, "room_dates", bookingDateKey);
-        const dateSnap = await getDoc(dateDocRef);
-
-        if (dateSnap.exists()) {
-          const existingBookings = dateSnap.data().bookings || [];
-          const isBooked = existingBookings.some(
-            (b: BookingData) => b.roomnumber === room.number
-          );
-          if (isBooked) {
-            return alert(`Room ${room.number} is already booked on ${bookingDateKey}`);
-          }
-        }
-      }
-
-      // Step 3: Add booking to each day
-      for (let d = new Date(startDate); d < endDate; d.setDate(d.getDate() + 1)) {
-        const bookingDateKey = d.toISOString().split("T")[0];
+        const bookingDateKey = d.toLocaleDateString("en-CA");
         await addBookingToDate(bookingDateKey, booking);
-      }
 
-      alert("User and booking added successfully!");
-      onClose()
-    } catch (err) {
-      console.error("Error during user/booking creation:", err);
-      alert("Failed to create user or booking.");
+        // Add this at the end of try block in handleAddUser
+
+// 4. Add to bulkBooking
+if (!bulkName) {
+  alert("Bulk booking name is required.");
+  return;
+}
+
+const bulkBookingRef = doc(db, "bulkBooking", bulkName);
+const bulkSnap = await getDoc(bulkBookingRef);
+
+const roomEntries = filteredRoom.map((r) => ({
+  number: r.number,
+  type: r.type,
+  roomCategoryId: r.roomCategoryId,
+}));
+
+if (bulkSnap.exists()) {
+  // Add rooms to existing document
+  await updateDoc(bulkBookingRef, {
+    rooms: arrayUnion(...roomEntries),
+  });
+  console.log("Bulk booking updated with new rooms.");
+} else {
+  // Create new bulk booking document
+  await setDoc(bulkBookingRef, {
+    user_id: userRef,
+    amount: 0,
+    amount_paid: 0,
+    rooms: roomEntries,
+  });
+  console.log("New bulk booking created.");
+}
+
+      }
     }
-  };
+
+    alert("All rooms booked successfully for the user!");
+  } catch (err) {
+    console.error("Error during booking:", err);
+    alert("Failed to complete booking.");
+  }
+};
+
 
   const addBookingToDate = async (
     date: string, // format: "YYYY-MM-DD"
@@ -200,17 +232,17 @@ export default function BookUser({
         });
       }
 
-      alert("Booking added successfully!");
+      // alert("Booking added successfully!");
     } catch (error) {
       console.error("Error adding booking:", error);
       alert("Failed to add booking.");
     }
   };
-
   useEffect(() => {
+    setFilteredRoom(room);
     const fetchRoom = async () => {
       try {
-        const roomRef = doc(db, "roomtypes", room.roomCategoryId);
+        const roomRef = doc(db, "roomtypes", room[0].roomCategoryId);
         const roomSnap = await getDoc(roomRef);
 
         if (roomSnap.exists()) {
@@ -222,21 +254,38 @@ export default function BookUser({
     };
 
     fetchRoom();
-     setFormData((prev) => ({
+    setFormData((prev) => ({
       ...prev,
       checkInDate: date,
     }));
-      setFormData((prev) => ({
-    ...prev,
-    checkInTime: "13:30",
-  }));
-      setFormData((prev) => ({
-    ...prev,
-    checkOutTime: "13:30",
-  }));
-  }, [room.roomCategoryId]);
-  
+    setFormData((prev) => ({
+      ...prev,
+      checkInTime: "13:30",
+    }));
+    setFormData((prev) => ({
+      ...prev,
+      checkOutTime: "13:30",
+    }));
 
+      const dummydate = new Date(date);
+  const nextDay = new Date(dummydate);
+nextDay.setDate(dummydate.getDate() + 1);
+    setFormData((prev) => ({
+      ...prev,
+      checkOutTime: "13:30",
+    }));
+setFormData((prev)=>({
+  ...prev,
+  checkOutDate: nextDay.toLocaleDateString("en-CA"),
+}));
+setNo_of_room(room.length)
+  },[]);
+
+
+
+  useEffect(() => {
+    setFilteredRoom(room);
+  }, [room])
   if (!roomdata) {
     return (
       <div className="flex justify-center items-center h-[300px] text-white text-lg">
@@ -249,7 +298,7 @@ export default function BookUser({
     <div className="max-w-full mx-auto mt-10 py-4 px-8 shadow-xl rounded-2xl space-y-4 bg-black">
       <div className="flex items-center justify-between mb-4">
 
-        <h2 className="text-xl text-white font-semibold">Booking for Room {room.number}</h2>
+        <h2 className="text-xl text-white font-semibold">Bulk Booking for Room {room[0].number}</h2>
         <button
           onClick={onClose}
           className="text-sm text-white border border-red-400 px-3 py-1 rounded hover:bg-red-950"
@@ -257,8 +306,84 @@ export default function BookUser({
           Close
         </button>
       </div>
+      <div className="border border-white p-4 rounded-md">
+
+
+        <div className="grid grid-cols-4 gap-4 mb-4 bg-gray-500 p-2 rounded-md">
+          {filteredRoom?.map((room) => (
+            <div
+              key={room.number}
+              className="flex flex-col items-center justify-center bg-gray-800 text-white p-2 rounded shadow-md"
+            >
+              <div className="text-sm">Room {room.number}</div>
+            </div>
+          ))}
+        </div>
+        <div className="flex justify-between">
+          {/* Select number of rooms */}
+          <div className="relative inline-block">
+            <button
+              onClick={() => setNo_of_room_open(!no_of_rooms_open)}
+              className="border text-start w-s border-gray-300 bg-gray-800 text-white text-lg px-4 py-1 rounded focus:outline-none"
+            >
+              Select Number of Rooms  {no_of_room}
+              <span className="ml-2 text-gray-400 inline-grid">
+                {no_of_rooms_open ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+              </span>
+            </button>
+
+            <div
+              className={`absolute w-1/2 top-full right-0 bg-white rounded-lg p-4 mt-1 shadow-md transform origin-top transition-all duration-200 ${no_of_rooms_open ? 'scale-y-100' : 'scale-y-0'
+                }`}
+            >
+
+              {Array.from({ length: room.length-1 }, (_, i) => i + 2).map((num) => (
+                <button
+                  key={num}
+                  onClick={() => {
+                    setNo_of_room(num);
+                    setNo_of_room_open(false);
+                  }}
+                  className="block py-1 px-1 text-center w-full hover:bg-gray-100 rounded text-sm text-gray-800"
+                >
+                  {num}
+                </button>
+              ))}
+
+            </div>
+          </div>
+          {/* Button */}
+          <button className="bg-gray-800 border border-white text-white px-4 py-2 rounded-md text-sm hover:bg-gray-800 cursor-pointer" onClick={() => {
+
+            setFilteredRoom(room.slice(0,no_of_room));
+          }
+          }>
+            Filter Rooms
+          </button>
+        </div>
+
+      </div>
+
+          <div className="flex justify-between">
+      <h2 className="text-xl text-white font-semibold">Enter users details</h2>
+<div className="flex items-center space-x-2 mb-4">
+  <input
+    type="checkbox"
+    id="userDetails"
+    checked={isAlreadyBulkBooked}
+    onChange={(e) => setIsAlreadyBulkBooked(e.target.checked)}
+    className="form-checkbox h-4 w-4 text-blue-600"
+  />
+  <label htmlFor="userDetails" className="text-white">
+    Adding In Existing Bulk Room
+  </label>
+</div>
+
+
+          </div>
       <form onSubmit={handleSubmit} className="text-white grid gap-10 grid-cols-3">
         {/* Name */}
+        {(!isAlreadyBulkBooked)&&
         <div className="space-y-1">
           <label htmlFor="name" className="block text-sm font-medium">Name</label>
           <input
@@ -271,7 +396,7 @@ export default function BookUser({
             required
             className="w-full border px-3 py-2 rounded bg-black text-white"
           />
-        </div>
+        </div>}
 
         {/* Phone */}
         <div className="space-y-1">
@@ -288,32 +413,32 @@ export default function BookUser({
           />
         </div>
         {/* Number of People */}
-<div className="space-y-1">
-  <label htmlFor="people" className="block text-sm font-medium">Number of People</label>
-  <select
-    id="people"
-    value={formData.people}
-    onChange={(e) => {
-      const selected = e.target.value;
+        <div className="space-y-1">
+          <label htmlFor="people" className="block text-sm font-medium">Number of People</label>
+          <select
+            id="people"
+            value={formData.people}
+            onChange={(e) => {
+              const selected = e.target.value;
 
-      // Get price from roomData using the selected key
-      const price = roomdata[selected as keyof roomdatatype] as number;
+              // Get price from roomData using the selected key
+              const price = roomdata[selected as keyof roomdatatype] as number;
 
-      setFormData((prev) => ({
-        ...prev,
-        people: selected,
-        totalAmount: price || 0, // fallback to 0 if not found
-      }));
-    }}
-    className="w-full h-10 border px-4 py-2 rounded bg-black text-white"
-  >
-    <option value = "select">Select</option>
-    <option value="single_price">Single</option>
-    <option value="double_price">Double</option>
-    <option value="triple_price">Triple</option>
-    <option value="quad_price">Quad</option>
-  </select>
-</div>
+              setFormData((prev) => ({
+                ...prev,
+                people: selected,
+                totalAmount: price || 0, // fallback to 0 if not found
+              }));
+            }}
+            className="w-full h-10 border px-4 py-2 rounded bg-black text-white"
+          >
+            <option value="select">Select</option>
+            <option value="single_price">Single</option>
+            <option value="double_price">Double</option>
+            <option value="triple_price">Triple</option>
+            <option value="quad_price">Quad</option>
+          </select>
+        </div>
 
 
 
@@ -321,6 +446,7 @@ export default function BookUser({
         <div className="space-y-1">
           <label htmlFor="checkInDate" className="block text-sm font-medium">Check-In Date</label>
           <input
+  readOnly
             id="checkInDate"
             name="checkInDate"
             type="date"
@@ -335,6 +461,7 @@ export default function BookUser({
         <div className="space-y-1">
           <label htmlFor="checkInTime" className="block text-sm font-medium">Check-In Time</label>
           <input
+           readOnly
             id="checkInTime"
             name="checkInTime"
             type="time"
@@ -362,6 +489,7 @@ export default function BookUser({
         <div className="space-y-1">
           <label htmlFor="checkOutDate" className="block text-sm font-medium">Check-Out Date</label>
           <input
+           readOnly
             id="checkOutDate"
             name="checkOutDate"
             type="date"
@@ -376,6 +504,7 @@ export default function BookUser({
         <div className="space-y-1">
           <label htmlFor="checkOutTime" className="block text-sm font-medium">Check-Out Time</label>
           <input
+           readOnly
             id="checkOutTime"
             name="checkOutTime"
             type="time"
@@ -404,6 +533,7 @@ export default function BookUser({
         </div>
 
         {/* ID Type */}
+        {(!isAlreadyBulkBooked)&&
         <div className="space-y-1">
           <label htmlFor="idtype" className="block text-sm font-medium">ID Type</label>
           <input
@@ -414,8 +544,9 @@ export default function BookUser({
             className="w-full border px-3 py-2 rounded bg-black text-white"
           />
         </div>
-
+}
         {/* ID Number */}
+        {(!isAlreadyBulkBooked)&&
         <div className="space-y-1">
           <label htmlFor="idnumber" className="block text-sm font-medium">ID Number</label>
           <input
@@ -426,9 +557,10 @@ export default function BookUser({
             className="w-full border px-3 py-2 rounded bg-black text-white"
           />
         </div>
-
+}
 
         {/* GST */}
+        {(!isAlreadyBulkBooked)&&
         <div className="space-y-1">
           <label htmlFor="gst" className="block text-sm font-medium">GST (Optional)</label>
           <input
@@ -439,8 +571,10 @@ export default function BookUser({
             className="w-full border px-3 py-2 rounded bg-black text-white"
           />
         </div>
+}
         {/* Address */}
-        <div className="space-y-1 col-span-3">
+        {(!isAlreadyBulkBooked)&&
+        <div className="space-y-1 col-span-2">
           <label htmlFor="address" className="block text-sm font-medium">Address</label>
           <input
             id="address"
@@ -450,6 +584,19 @@ export default function BookUser({
             className="w-full border px-3 py-2 rounded bg-black text-white"
           />
         </div>
+}
+        {/* Bulk Name */}
+        <div className="space-y-1">
+          <label htmlFor="bulkName" className="block text-sm font-medium">Bulk Name</label>
+          <input
+            id="bulkName"
+            value={formData.bulkName}
+            onChange={(e) => setFormData({ ...formData, bulkName: e.target.value })}
+            placeholder="Bulk Booking Name"
+            className="w-full border px-3 py-2 rounded bg-black text-white"
+          />
+        </div>
+        
 
         {/* Buttons */}
         <div className="col-span-3 gap-4 flex">

@@ -2,9 +2,8 @@
 "use client";
 
 import { useState } from "react";
-import { DocumentReference } from "firebase/firestore";
+import {  DocumentReference } from "firebase/firestore";
 import { db } from "../../lib/firebaseConfig";
-import { useEffect } from "react";
 import {
 
   doc,
@@ -14,7 +13,6 @@ import {
   arrayUnion,
   Timestamp,
 } from "firebase/firestore";
-import { roomdatatype } from "./HomeRoomView";
 
 // import BookingConfirmation from "@/components/BookingConfirmation";
 export interface Room {
@@ -38,9 +36,9 @@ export interface BookingData {
 }
 
 type RoomStatus = 'available' | 'booked' | 'booked_not_checked_in';
-export default function BookUser({
+export default function BulkBooking({
   room,
-  date,
+  // date,
   onClose
 }: {
   room: Room;
@@ -50,11 +48,9 @@ export default function BookUser({
 
 ) {
   // const [submited,setSubmitted] = useState(false);
-  const [roomdata, setRoomdata] = useState<roomdatatype | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
-    people: "select",
     checkInDate: "",
     checkInTime: "",
     checkOutDate: "",
@@ -83,104 +79,91 @@ export default function BookUser({
     e.preventDefault();
     handleAddUser();
     // setSubmitted(true);
-
+    onClose()
   };
 
-  const handleAddUser = async () => {
-    const {
+const handleAddUser = async () => {
+  const {
+    name,
+    phone,
+    idtype,
+    idnumber,
+    address,
+    gst,
+    checkInDate,
+    checkInTime,
+    checkOutDate,
+    checkOutTime,
+    totalAmount,
+    paidAmount,
+  } = formData;
+
+  if (
+    !name ||
+    !phone ||
+    !idnumber ||
+    !idtype ||
+    !address ||
+    !checkInDate ||
+    !checkInTime ||
+    !checkOutDate ||
+    !checkOutTime ||
+    !totalAmount
+  ) {
+    return alert("Please fill in all required fields.");
+  }
+
+  try {
+    // Step 1: Create user with phone number as document ID
+    const userRef = doc(db, "users", phone); // phone as document ID
+    await setDoc(userRef, {
       name,
       phone,
       idtype,
       idnumber,
+      gst: gst || null,
       address,
-      gst,
-      checkInDate,
-      checkInTime,
-      checkOutDate,
-      checkOutTime,
-      totalAmount,
-      paidAmount,
-    } = formData;
+      user_id: phone, // Save document ID inside as well
+      createdAt: new Date(),
+    });
 
-    if (
-      !name ||
-      !phone ||
-      !idnumber ||
-      !idtype ||
-      !address ||
-      !checkInDate ||
-      !checkInTime ||
-      !checkOutDate ||
-      !checkOutTime ||
-      !totalAmount
-    ) {
-      return alert("Please fill in all required fields.");
-    }
+    console.log("User added with phone ID:", phone);
 
-    try {
-      // Step 1: Create user with phone number as document ID
-      const userRef = doc(db, "users", phone);
-      await setDoc(userRef, {
-        name,
-        phone,
-        idtype,
-        idnumber,
-        gst: gst || null,
-        address,
-        user_id: phone,
-        createdAt: new Date(),
-      });
+const checkinTimestamp = Timestamp.fromDate(new Date(`${checkInDate}T${checkInTime}`));
+const checkoutTimestamp = Timestamp.fromDate(new Date(`${checkOutDate}T${checkOutTime}`));
 
-      console.log("User added with phone ID:", phone);
+const booking = {
+  amountpaid: Number(paidAmount),
+  bookingstatus: "booked",
+  checkinstatus: false,
+  checkintime: checkinTimestamp,
+  checkouttime: checkoutTimestamp,
+  roomnumber: room.number,
+  roomtype: doc(db, "roomtypes", room.roomCategoryId),
+  totalamount: Number(totalAmount),
+  user_id: userRef,
+};
 
-      const checkinTimestamp = Timestamp.fromDate(new Date(`${checkInDate}T${checkInTime}`));
-      const checkoutTimestamp = Timestamp.fromDate(new Date(`${checkOutDate}T${checkOutTime}`));
+// Add booking to every date from check-in to day before check-out
+const startDate = new Date(checkInDate);
+const endDate = new Date(checkOutDate);
 
-      const booking = {
-        amountpaid: Number(paidAmount),
-        bookingstatus: "booked",
-        checkinstatus: false,
-        checkintime: checkinTimestamp,
-        checkouttime: checkoutTimestamp,
-        roomnumber: room.number,
-        roomtype: doc(db, "roomtypes", room.roomCategoryId),
-        totalamount: Number(totalAmount),
-        user_id: userRef,
-      };
+for (
+  let d = new Date(startDate);
+  d < endDate;
+  d.setDate(d.getDate() + 1)
+) {
+  const bookingDateKey = d.toISOString().split("T")[0];
+  await addBookingToDate(bookingDateKey, booking);
+}
 
-      // Step 2: Check availability for every date between check-in and check-out (exclusive)
-      const startDate = new Date(checkInDate);
-      const endDate = new Date(checkOutDate);
 
-      for (let d = new Date(startDate); d < endDate; d.setDate(d.getDate() + 1)) {
-        const bookingDateKey = d.toISOString().split("T")[0];
-        const dateDocRef = doc(db, "room_dates", bookingDateKey);
-        const dateSnap = await getDoc(dateDocRef);
-
-        if (dateSnap.exists()) {
-          const existingBookings = dateSnap.data().bookings || [];
-          const isBooked = existingBookings.some(
-            (b: BookingData) => b.roomnumber === room.number
-          );
-          if (isBooked) {
-            return alert(`Room ${room.number} is already booked on ${bookingDateKey}`);
-          }
-        }
-      }
-
-      // Step 3: Add booking to each day
-      for (let d = new Date(startDate); d < endDate; d.setDate(d.getDate() + 1)) {
-        const bookingDateKey = d.toISOString().split("T")[0];
-        await addBookingToDate(bookingDateKey, booking);
-      }
-
-      alert("User and booking added successfully!");
-      onClose()
-    } catch (err) {
-      console.error("Error during user/booking creation:", err);
-      alert("Failed to create user or booking.");
-    }
-  };
+    alert("User and booking added successfully!");
+  } catch (err) {
+    console.error("Error during user/booking creation:", err);
+    alert("Failed to create user or booking.");
+  }
+};
 
   const addBookingToDate = async (
     date: string, // format: "YYYY-MM-DD"
@@ -207,49 +190,12 @@ export default function BookUser({
     }
   };
 
-  useEffect(() => {
-    const fetchRoom = async () => {
-      try {
-        const roomRef = doc(db, "roomtypes", room.roomCategoryId);
-        const roomSnap = await getDoc(roomRef);
-
-        if (roomSnap.exists()) {
-          setRoomdata(roomSnap.data() as roomdatatype);
-        }
-      } catch (err) {
-        console.error("Failed to fetch room:", err);
-      }
-    };
-
-    fetchRoom();
-     setFormData((prev) => ({
-      ...prev,
-      checkInDate: date,
-    }));
-      setFormData((prev) => ({
-    ...prev,
-    checkInTime: "13:30",
-  }));
-      setFormData((prev) => ({
-    ...prev,
-    checkOutTime: "13:30",
-  }));
-  }, [room.roomCategoryId]);
-  
-
-  if (!roomdata) {
-    return (
-      <div className="flex justify-center items-center h-[300px] text-white text-lg">
-        Loading room details...
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-full mx-auto mt-10 py-4 px-8 shadow-xl rounded-2xl space-y-4 bg-black">
       <div className="flex items-center justify-between mb-4">
 
-        <h2 className="text-xl text-white font-semibold">Booking for Room {room.number}</h2>
+        <h2 className="text-xl text-white font-semibold">Bulk Booking for Room {room.number}</h2>
         <button
           onClick={onClose}
           className="text-sm text-white border border-red-400 px-3 py-1 rounded hover:bg-red-950"
@@ -287,34 +233,17 @@ export default function BookUser({
             className="w-full border px-3 py-2 rounded bg-black text-white"
           />
         </div>
-        {/* Number of People */}
-<div className="space-y-1">
-  <label htmlFor="people" className="block text-sm font-medium">Number of People</label>
-  <select
-    id="people"
-    value={formData.people}
-    onChange={(e) => {
-      const selected = e.target.value;
-
-      // Get price from roomData using the selected key
-      const price = roomdata[selected as keyof roomdatatype] as number;
-
-      setFormData((prev) => ({
-        ...prev,
-        people: selected,
-        totalAmount: price || 0, // fallback to 0 if not found
-      }));
-    }}
-    className="w-full h-10 border px-4 py-2 rounded bg-black text-white"
-  >
-    <option value = "select">Select</option>
-    <option value="single_price">Single</option>
-    <option value="double_price">Double</option>
-    <option value="triple_price">Triple</option>
-    <option value="quad_price">Quad</option>
-  </select>
-</div>
-
+        {/* Address */}
+        <div className="space-y-1">
+          <label htmlFor="address" className="block text-sm font-medium">Address</label>
+          <input
+            id="address"
+            value={formData.address}
+            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+            placeholder="Address"
+            className="w-full border px-3 py-2 rounded bg-black text-white"
+          />
+        </div>
 
 
         {/* Check-In Date */}
@@ -436,17 +365,6 @@ export default function BookUser({
             value={formData.gst}
             onChange={(e) => setFormData({ ...formData, gst: e.target.value })}
             placeholder="GST Number"
-            className="w-full border px-3 py-2 rounded bg-black text-white"
-          />
-        </div>
-        {/* Address */}
-        <div className="space-y-1 col-span-3">
-          <label htmlFor="address" className="block text-sm font-medium">Address</label>
-          <input
-            id="address"
-            value={formData.address}
-            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-            placeholder="Address"
             className="w-full border px-3 py-2 rounded bg-black text-white"
           />
         </div>

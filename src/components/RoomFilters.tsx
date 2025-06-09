@@ -1,19 +1,15 @@
 "use client";
-
-import { useState } from "react";
-
+import { useEffect, useState } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { useRoomFilter } from "@/store/useRoomFilter";
-
-
 export default function RoomFilters() {
-    const { setFilters,triggerFetch } = useRoomFilter();
+    const { setFilters, triggerFetch } = useRoomFilter();
     const [selectedDate, setSelectedDate] = useState(new Date());
-    const [bulkBooking, setBulkBooking] = useState(true);
+    const [bulkBooking, setBulkBooking] = useState(false);
     // const [room_type_open, setRoom_type_open] = useState(false);
     // const [room_type, setRoom_type] = useState("All AC/NON AC");
-    const [no_of_rooms_open, setNo_of_room_open] = useState(false);
-    const [no_of_room, setNo_of_room] = useState(0);
+    // const [no_of_rooms_open, setNo_of_room_open] = useState(false);
+    // const [no_of_room, setNo_of_room] = useState(2);
     const [category_open, setCategory_open] = useState(false);
     const [category, setCategory] = useState("All Category Rooms");
 
@@ -25,6 +21,16 @@ export default function RoomFilters() {
         newDate.setDate(newDate.getDate() + days);
         setSelectedDate(newDate);
     };
+    useEffect(() => {
+        setFilters({
+            date: selectedDate,
+            category,
+            // numberOfRooms: no_of_room,
+            bulkBooking,
+        });
+
+        // triggerFetch();
+    }, [category, selectedDate, bulkBooking])
 
 
 
@@ -158,16 +164,6 @@ export default function RoomFilters() {
                         >
                             SUITE/ CLUB A/C
                         </button>
-                        {/* <button
-                            onClick={() => {
-                                setCategory("Club");
-                                setCategory_open(false);
-                            }
-                            }
-                            className="block px-2 py-1 hover:bg-gray-100 rounded text-sm text-gray-800"
-                        >
-                            Club
-                        </button> */}
                         <button
                             onClick={() => {
                                 setCategory("Standard Non A/C");
@@ -194,26 +190,26 @@ export default function RoomFilters() {
                 </label>
 
                 {/* Buttons 1*/}
-                <button className="bg-gray-700 text-white px-4 py-2 rounded-md text-sm hover:bg-gray-800"  onClick={() =>{
+                <button className="bg-gray-700 text-white px-4 py-2 rounded-md text-sm hover:bg-gray-800" onClick={() => {
 
-                setFilters({
-    date: selectedDate,
-    category,
-    numberOfRooms: no_of_room,
-    bulkBooking,
-  });
+                    setFilters({
+                        date: selectedDate,
+                        category,
+                        // numberOfRooms: no_of_room,
+                        bulkBooking,
+                    });
 
-  triggerFetch();
+                    triggerFetch();
                 }
-  }>
+                }>
                     Search Rooms
                 </button>
             </div>
             {/* Section 2 */}
-            <div className="flex flex-row items-center justify-between w-full">
-                {/* Room Count Dropdown */}
+            {/* <div className="flex flex-row items-center justify-between w-full"> */}
+            {/* Room Count Dropdown */}
 
-                <div className="relative inline-block">
+            {/* <div className="relative inline-block">
                     <button
                         onClick={() => setNo_of_room_open(!no_of_rooms_open)}
                         className="border text-start w-s border-gray-300 bg-white text-gray-500 text-lg px-4 py-1 rounded focus:outline-none"
@@ -225,35 +221,50 @@ export default function RoomFilters() {
                     </button>
 
                     <div
-                        className={`absolute w-sm top-full right-0 bg-white rounded-lg p-4 mt-1 shadow-md transform origin-top transition-all duration-200 ${no_of_rooms_open ? 'scale-y-100' : 'scale-y-0'
+                        className={`absolute w-1/2 top-full right-0 bg-white rounded-lg p-4 mt-1 shadow-md transform origin-top transition-all duration-200 ${no_of_rooms_open ? 'scale-y-100' : 'scale-y-0'
                             }`}
                     >
 
-                        {[...Array(20)].map((_, i) => (
-
-                  
-                                <button
-                                key={i}
-                                    onClick={() => {
-                                        setNo_of_room(i);
-                                        setNo_of_room_open(false);
-                                    }
-                                    }
-                                    className="block px-2 py-1 text-start w-full hover:bg-gray-100 rounded text-sm text-gray-800"
-                                >
-                                    {i}
-                                </button>
-
-
+                        {Array.from({ length: 19 }, (_, i) => i + 2).map((num) => (
+                            <button
+                                key={num}
+                                onClick={() => {
+                                    setNo_of_room(num);
+                                    setNo_of_room_open(false);
+                                }}
+                                className="block py-1 px-1 text-center w-full hover:bg-gray-100 rounded text-sm text-gray-800"
+                            >
+                                {num}
+                            </button>
                         ))}
-                    </div>
-                </div>
 
-                {/* Buttons 2*/}
-                <button className="bg-gray-700 text-white px-4 py-2 rounded-md text-sm hover:bg-gray-800">
+                    </div>
+                </div> */}
+
+            {/* Buttons 2*/}
+            {/* <button
+                    className="bg-gray-700 text-white px-4 py-2 rounded-md text-sm hover:bg-gray-800"
+                    onClick={() => {
+                        if ( !bulkBooking || category === "All Category Rooms") {
+                            alert("Please select a specific room category before booking.");
+                            return;
+                        }
+
+
+                         setFilters({
+                        date: selectedDate,
+                        category,
+                        numberOfRooms: no_of_room,
+                        bulkBooking,
+                    });
+
+                    triggerBulkBooking();
+                    }}
+                >
                     Book Rooms
-                </button>
-            </div>
+                </button> */}
+
+            {/* </div> */}
 
         </div>
     );

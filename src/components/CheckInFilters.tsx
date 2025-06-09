@@ -1,23 +1,23 @@
 "use client";
 
-import { useState } from "react";
+// import { useState } from "react";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+// import { ChevronLeft, ChevronRight } from "lucide-react";
 
 
 export default function CheckInFilters() {
-    const [selectedDate, setSelectedDate] = useState(new Date());
-    const [bulkBooking, setBulkBooking] = useState(true);
+    // const [selectedDate, setSelectedDate] = useState(new Date());
+    // const [bulkBooking, setBulkBooking] = useState(true);
 
 
-    const formatDate = (date: Date) =>
-        date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    // const formatDate = (date: Date) =>
+    //     date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
-    const changeDate = (days: number) => {
-        const newDate = new Date(selectedDate);
-        newDate.setDate(newDate.getDate() + days);
-        setSelectedDate(newDate);
-    };
+    // const changeDate = (days: number) => {
+    //     const newDate = new Date(selectedDate);
+    //     newDate.setDate(newDate.getDate() + days);
+    //     setSelectedDate(newDate);
+    // };
 
 
 
@@ -27,7 +27,7 @@ export default function CheckInFilters() {
             <div className="flex flex-row items-center justify-between w-full">
 
                 {/* Date Picker */}
-                <div className="flex items-center gap-2">
+                {/* <div className="flex items-center gap-2">
                     <button
                         onClick={() => changeDate(-1)}
                         className="border rounded p-1 text-gray-500 hover:bg-gray-100"
@@ -43,7 +43,7 @@ export default function CheckInFilters() {
                     >
                         <ChevronRight size={16} />
                     </button>
-                </div>
+                </div> */}
                 <input
                     type="tel"
                     placeholder="Enter Phone Number"
@@ -52,7 +52,7 @@ export default function CheckInFilters() {
 
 
                 {/* Bulk Booking */}
-                <label className="flex items-center gap-2 text-gray-700">
+                {/* <label className="flex items-center gap-2 text-gray-700">
                     <span>Bulk Booking</span>
                     <input
                         type="checkbox"
@@ -60,7 +60,7 @@ export default function CheckInFilters() {
                         onChange={(e) => setBulkBooking(e.target.checked)}
                         className="w-4 h-4 border border-gray-400 rounded"
                     />
-                </label>
+                </label> */}
 
                 {/* Buttons 1*/}
                 <button className="bg-gray-700 text-white px-4 py-2 rounded-md text-sm hover:bg-gray-800">

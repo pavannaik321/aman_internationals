@@ -6,10 +6,9 @@ import HomeRoomView from "./HomeRoomView";
 import BookingConfirmation from "./BookUsers";
 // import CustomerCard from "./ViewCustomer";
 import { BookingData } from "@/app/checkdata/page";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, Timestamp } from "firebase/firestore";
 import { db } from "../../lib/firebaseConfig";
 import CustomerCard from "./ViewCustomer";
-import BulkRoomBooking from "./BulkBooking";
 const OriginalRoomData: {
   date: Date;
   rooms: {
@@ -161,6 +160,8 @@ export interface Room {
   status: RoomStatus;
   customerData?: string;
   checkedin?: boolean;
+  checkintime?: string;
+  checkouttime?: string;
 }
 
 // interface CustomerInfo {
@@ -173,6 +174,22 @@ export interface Room {
 //   paidAmount: number;
 //   bookingDate: Date;
 // }
+
+function convertToIST(dateInput: Date | Timestamp): string {
+  // Convert Firebase Timestamp to JS Date if needed
+  const utcDate = dateInput instanceof Timestamp ? dateInput.toDate() : dateInput;
+
+  // Format date using Asia/Kolkata timezone
+  return utcDate.toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    hour12: true, // Use false if you prefer 24-hour format
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 
 // Function to update static roomData with booking info
@@ -203,6 +220,8 @@ function mergeRoomDataWithBookings(
           status: "booked" as RoomStatus,
           customerData: match.user_id,
           checkedin: match.checkinstatus,
+          checkintime: match.checkintime,
+          checkouttime: match.checkouttime
         };
       }
       return { ...room };
@@ -215,14 +234,10 @@ function mergeRoomDataWithBookings(
   };
 }
 
-export default function RoomGrid() {
-  //  const [triggerEffect, setTriggerEffect] = useState(false);
+export default function CheckinRoomGrid() {
+
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [bookRoom, setBookRoom] = useState<Room | null>(null);
-  const [bulkBookingRoom, setBulkBookingRoom] = useState<{
-
-    rooms: Room[];
-  } | null>(null);
   const [selectedUser, setSelectedUser] = useState<Room | null>(null);
   const [bookings, setBookings] = useState<CleanBookingData[] | null>(null);
   const todaysdate = new Date();
@@ -234,31 +249,17 @@ export default function RoomGrid() {
       rooms: Room[];
     }[];
   } | null>(null);
-  const { date, category, bulkBooking } = useRoomFilter();
-  // from where filter data is called
-  const filteredRooms = updatedbookings?.rooms
-    .filter((group) => {
-      const categoryMatch =
-        category.toLowerCase() === "all category rooms" ||
-        group.category.toLowerCase() === category.toLowerCase();
-
-      return categoryMatch;
-    })
-    .map((group) => {
-      const allRooms = group.rooms;
-      const availableRooms = group.rooms.filter((room) => room.status === "available");
-
-      return {
-        ...group,
-        rooms: bulkBooking ? availableRooms : allRooms, // key condition
-      };
-    })
-    .filter((group) => group.rooms.length > 0); // only keep groups with at least 1 room
+  const { date, category } = useRoomFilter();
 
 
+  const filteredRooms = updatedbookings?.rooms.filter((group) => {
+    // console.log("data : ", date)
+    const categoryMatch =
+      category.toLowerCase() === "all category rooms" || // fix here
+      group.category.toLowerCase() === category.toLowerCase();
 
-
-
+    return categoryMatch;
+  });
 
   const getBookingsByDate = async (
     date: string
@@ -275,8 +276,8 @@ export default function RoomGrid() {
           amountpaid: b.amountpaid,
           bookingstatus: b.bookingstatus,
           checkinstatus: b.checkinstatus,
-          checkintime: b.checkintime.toDate().toISOString(),
-          checkouttime: b.checkouttime.toDate().toISOString(),
+          checkintime: convertToIST(b.checkintime),
+          checkouttime: convertToIST(b.checkouttime),
           roomnumber: b.roomnumber,
           totalamount: b.totalamount,
           roomtype: b.roomtype?.id || b.roomtype?.path || "unknown",
@@ -316,40 +317,22 @@ export default function RoomGrid() {
   }, [bookings, date, updatedbookings]);
 
 
-
   if (filteredRooms?.length === 0) {
     return <div className="p-6 text-red-600">No rooms found for the selected filters.</div>;
   }
   return (
-    <>
-      <div className="flex justify-end p-4">
-        <button
-          className="bg-gray-700 text-white px-4 py-2 rounded-md text-sm hover:bg-gray-800"
-          onClick={() => {
-            if (!bulkBooking || category === "All Category Rooms") {
-              alert("Please select a specific room category before booking.");
-              return;
-            }
-            //  setTriggerEffect((prev) => !prev);
-            setBulkBookingRoom({
-              rooms: filteredRooms ? filteredRooms.flatMap(group => group.rooms) : []
-            });
-          }}
-        >
-          Book Rooms
-        </button>
-      </div>
-      <div className="grid grid-cols-4 gap-6 p-6">
+    <div className="grid grid-cols-4 gap-6 p-6">
+      {filteredRooms?.map((group, idx) => (
+        <div key={idx}>
+          <h2 className="text-center font-bold text-gray-800 mb-4">{group.category}</h2>
+          <div className="flex flex-col gap-4">
+            {group.rooms.map((room) => (
+              <div
+                key={room.number}
+                className="border-1 rounded-md shadow-sm flex-col gap-4"
+              >
+                <div className="flex items-center gap-4 p-2">
 
-        {filteredRooms?.map((group, idx) => (
-          <div key={idx}>
-            <h2 className="text-center font-bold text-gray-800 mb-4">{group.category}</h2>
-            <div className="flex flex-col gap-4">
-              {group.rooms.map((room) => (
-                <div
-                  key={room.number}
-                  className="border rounded-md p-2 shadow-sm flex items-center gap-4"
-                >
                   <div
                     className={`w-12 h-12 rounded text-white font-bold flex items-center justify-center ${statusColor[room.status]}`}
                   >
@@ -379,57 +362,56 @@ export default function RoomGrid() {
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
+                {
+                  (room.status == "booked") ? (
+                    <div className={`border-t border-black rounded-b-md text-center text-sm py-1 flex justify-evenly text-white ${statusColor[room.status]}`}>
+                      <div>{room.checkintime}</div>
+                      <h2 className="text-black">|</h2>
+                      <div>{room.checkouttime}</div>
+                    </div>
+                  ) : (
+                    <div></div>
+                  )
+                }
+              </div>
+            ))}
           </div>
-        ))}
-        {/* Room Details View Below */}
-        {selectedRoom && (
-          <div
-            className="mt-14 absolute pr-6"
-          // style={{ boxShadow: '0 0 100px 30px rgba(0, 0, 0, 0.5)' }}
-          >
+        </div>
+      ))}
+      {/* Room Details View Below */}
+      {selectedRoom && (
+        <div
+          className="mt-14 absolute pr-6"
+        // style={{ boxShadow: '0 0 100px 30px rgba(0, 0, 0, 0.5)' }}
+        >
 
-            <HomeRoomView room={selectedRoom} onClose={() => setSelectedRoom(null)} />
-          </div>
-        )}
-        {/* Book Room View Below */}
-        {bookRoom && (
-          <div
-            className="absolute pr-6 left-1/2 transform -translate-x-1/2"
-          // style={{ boxShadow: '0 0 100px 30px rgba(0, 0, 0, 0.5)' }}
-          >
+          <HomeRoomView room={selectedRoom} onClose={() => setSelectedRoom(null)} />
+        </div>
+      )}
+      {/* Book Room View Below */}
+      {bookRoom && (
+        <div
+          className="absolute pr-6 left-1/2 transform -translate-x-1/2"
+        // style={{ boxShadow: '0 0 100px 30px rgba(0, 0, 0, 0.5)' }}
+        >
 
-            <BookingConfirmation room={
-              bookRoom
-            } date={currentDate} onClose={() => setBookRoom(null)} />
-          </div>
-        )}
-        {/* Bulk Book Room View Below */}
-        {bulkBookingRoom && (
-          <div
-            className="absolute pr-6 left-1/2 transform -translate-x-1/2"
-          // style={{ boxShadow: '0 0 100px 30px rgba(0, 0, 0, 0.5)' }}
-          >
+          <BookingConfirmation room={
+            bookRoom
+          } date={currentDate} onClose={() => setBookRoom(null)} />
+        </div>
+      )}
+      {/* View Customer View Below */}
+      {selectedUser?.customerData && (
+        <div
+          className="absolute pr-6 left-1/2 transform -translate-x-1/2"
+        // style={{ boxShadow: '0 0 100px 30px rgba(0, 0, 0, 0.5)' }}
+        >
 
-            <BulkRoomBooking room={
-              bulkBookingRoom.rooms
-            } date={currentDate} onClose={() => setBulkBookingRoom(null)} />
-          </div>
-        )}
-        {/* View Customer View Below */}
-        {selectedUser?.customerData && (
-          <div
-            className="absolute pr-6 left-1/2 transform -translate-x-1/2"
-          // style={{ boxShadow: '0 0 100px 30px rgba(0, 0, 0, 0.5)' }}
-          >
-
-            <CustomerCard customerId={
-              selectedUser.customerData
-            } roomNumber={selectedUser.number} date={currentDate} onClose={() => setSelectedUser(null)} />
-          </div>
-        )}
-      </div>
-    </>
+          <CustomerCard customerId={
+            selectedUser.customerData
+          } roomNumber={selectedUser.number} date={currentDate} onClose={() => setSelectedUser(null)} />
+        </div>
+      )}
+    </div>
   );
 }
