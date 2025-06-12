@@ -181,8 +181,8 @@ const { formattedDate: checkoutDate, formattedTime: checkoutTime } = formatDateT
 }
 
         body {
-font-family: "Times New Roman", Times, serif;
-          padding: 20px;
+            font-family: Arial, sans-serif;
+          padding: 10px;
           max-width: 800px;
           margin: auto;
           border: 1px solid #ccc;
@@ -190,9 +190,8 @@ font-family: "Times New Roman", Times, serif;
 
         h1, h2, h3 {
           text-align: center;
-          margin: 0;
+          margin: 2px;
         }
-
         .header {
           text-align: center;
           margin-bottom: 20px;
@@ -326,7 +325,8 @@ font-family: "Times New Roman", Times, serif;
             font-size: 14px;
         }
             p{
-            font-size:15px
+            font-size:17px;
+       margin:2px;
             }
     </style>
 </head>
@@ -474,7 +474,6 @@ font-family: "Times New Roman", Times, serif;
       <div class="totals">
         <p>Total Invoice Value</p>
         <p>Rupees ${amountInWords} only</p>
-        <p>(Rounding off)</p>
         <hr>
         <div class="title_heading">
           <p>Less Advance:</p>
