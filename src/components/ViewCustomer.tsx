@@ -160,7 +160,7 @@ const { formattedDate: checkoutDate, formattedTime: checkoutTime } = formatDateT
       <style>
       @media print {
   @page {
-    size: A4;
+    size: A5;
     margin: 0.5cm;
   }
 
@@ -168,7 +168,7 @@ const { formattedDate: checkoutDate, formattedTime: checkoutTime } = formatDateT
     margin: 0;
     padding: 0;
     font-size: 12px;
-    zoom: 0.85; /* Shrink content slightly */
+    zoom: 0.90; /* Shrink content slightly */
   }
 
   table, .details, .room-info, .totals, .footer-container, .signature, .title_heading {
