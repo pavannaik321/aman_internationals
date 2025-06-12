@@ -185,7 +185,7 @@ const { formattedDate: checkoutDate, formattedTime: checkoutTime } = formatDateT
           padding: 10px;
           max-width: 800px;
           margin: auto;
-          border: 1px solid #ccc;
+          // border: 1px solid #ccc;
         }
 
         h1, h2, h3 {
