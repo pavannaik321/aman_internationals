@@ -190,7 +190,7 @@ const { formattedDate: checkoutDate, formattedTime: checkoutTime } = formatDateT
 
         h1, h2, h3 {
           text-align: center;
-          margin: 5px;
+          margin: 10px;
         }
         .header {
           text-align: center;
@@ -217,8 +217,8 @@ const { formattedDate: checkoutDate, formattedTime: checkoutTime } = formatDateT
         }
 
         table{
-        margin-top:30px;
-        margin-botton:20px;
+        margin-top:40px;
+        margin-botton:40px;
         
         }
 
@@ -334,7 +334,7 @@ margin-bottom:80px;
         }
             p{
             font-size:17px;
-       margin:5px;
+       margin:10px;
             }
 
             .eo_heading{
