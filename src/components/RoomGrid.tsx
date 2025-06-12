@@ -426,7 +426,7 @@ export default function RoomGrid() {
 
             <CustomerCard customerId={
               selectedUser.customerData
-            } roomNumber={selectedUser.number} date={currentDate} onClose={() => setSelectedUser(null)} />
+            } roomNumber={selectedUser.number} roomType = {selectedUser.type} date={currentDate} onClose={() => setSelectedUser(null)} />
           </div>
         )}
       </div>
