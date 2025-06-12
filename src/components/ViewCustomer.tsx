@@ -190,7 +190,7 @@ const { formattedDate: checkoutDate, formattedTime: checkoutTime } = formatDateT
 
         h1, h2, h3 {
           text-align: center;
-          margin: 2px;
+          margin: 5px;
         }
         .header {
           text-align: center;
@@ -230,7 +230,9 @@ const { formattedDate: checkoutDate, formattedTime: checkoutTime } = formatDateT
         }
 
         .signature {
-          margin-top: 40px;
+          margin-top: 80px;
+margin-bottom:80px;
+
           display: flex;
           justify-content: space-between;
         }
@@ -326,7 +328,12 @@ const { formattedDate: checkoutDate, formattedTime: checkoutTime } = formatDateT
         }
             p{
             font-size:17px;
-       margin:2px;
+       margin:5px;
+            }
+
+            .eo_heading{
+            margin-top:10px;
+            
             }
     </style>
 </head>
@@ -485,7 +492,7 @@ const { formattedDate: checkoutDate, formattedTime: checkoutTime } = formatDateT
         </div>
       </div>
 
-      <div class="title_heading">
+      <div class="title_heading eo_heading">
         <p>E&O.E</p>
         <p>For Aman International</p>
       </div>
