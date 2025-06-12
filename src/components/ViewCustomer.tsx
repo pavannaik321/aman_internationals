@@ -216,6 +216,12 @@ const { formattedDate: checkoutDate, formattedTime: checkoutTime } = formatDateT
           border: 1px solid black;
         }
 
+        table{
+        margin-top:30px;
+        margin-botton:20px;
+        
+        }
+
         th, td {
           padding: 6px;
           text-align: center;
