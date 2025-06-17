@@ -5,20 +5,33 @@ import {
     SoapDispenserDroplet,
     LucideSoapDispenserDroplet,
     Brush,
-    AirVentIcon,
-    Tv,
-    GlassWater,
-    PillBottle,
-    Bell,
+    // AirVentIcon,
+    // Tv,
+    // GlassWater,
+    // PillBottle,
+    // Bell,
     // Additional icons for new amenities
-    ParkingCircleIcon,
-    ShowerHead,
-    Dumbbell,
-    BathIcon,
-    Coffee,
-    Dog
+    // ParkingCircleIcon,
+    // ShowerHead,
+    // Dumbbell,
+    // BathIcon,
+    // Coffee,
+    // Dog,
 } from "lucide-react";
-import { Room } from "./RoomCards";
+import {
+  MdAcUnit,
+  MdTv,
+  MdOutlineRoomService,
+  MdOutlineLocalDrink,
+  MdOutlineLocalCafe,
+  MdWifi,
+  MdLocalParking,
+  MdPool,
+  MdFitnessCenter,
+  MdSpa,
+  MdFreeBreakfast,
+  MdOutlinePets,
+} from "react-icons/md";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
@@ -33,12 +46,12 @@ const amenityIcons: {
     "Dental Kit": Brush,
 
     // Added amenities
-    "Parking": ParkingCircleIcon,
-    "Swimming Pool": BathIcon,
-    "Gym": Dumbbell,
-    "Spa": ShowerHead,
-    "Breakfast": Coffee,
-    "Pet Friendly": Dog,
+    "Parking": MdLocalParking,
+    "Swimming Pool": MdPool,
+    "Gym": MdFitnessCenter,
+    "Spa": MdSpa,
+    "Breakfast": MdFreeBreakfast,
+    "Pet Friendly": MdOutlinePets,
 };
 
 
@@ -46,18 +59,40 @@ const amenityIcons: {
 const facilitiesIcons: {
     [key: string]: React.ComponentType<React.SVGProps<SVGSVGElement>>;
 } = {
-    "Air-Conditioning": AirVentIcon,
-    "Cable TV": Tv,
-    "Kettle": PillBottle,
-    "Water bottle": GlassWater,
-    "Room Service": Bell,
+    "Air-Conditioning": MdAcUnit,
+    "Cable TV": MdTv,
+    "Kettle": MdOutlineLocalCafe,
+    "Water bottle": MdOutlineLocalDrink,
+    "Room Service": MdOutlineRoomService,
+    "Wi-Fi":MdWifi,
 };
 
+interface Room {
+  id: string;
+  category_id: string;
+  room_size:string;
+  category: string;
+  single_price: number;
+  double_price:number;
+  triple_price:number;
+  quad_price:number;
+  pax:number;
+  tariff:number;
+  gst:number;
+  people: number;
+  days: number;
+  images: string[];
+  facilities: string[];
+  amenities:string[];
+}
+interface roomdata {
+    data : Room
+}
 // const amineties: string[] = ["Soap", "Shampoo", "Dental Kit"]
 // const facilities: string[] = ["Air-Conditioning", "Cable TV", "Kettle", "Water bottle", "Room Service"];
 
 
-export default function RoomView(data:Room) {
+export default function RoomView({data}:roomdata) {
 
     return (
         <div className="w-full mx-auto p-4 shadow-md rounded-2xl">
@@ -187,6 +222,7 @@ export default function RoomView(data:Room) {
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
     );

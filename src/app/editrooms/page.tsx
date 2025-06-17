@@ -1,7 +1,7 @@
 "use client"
 import EditRoomsDataSection from '@/components/EditRoomsDataSection';
 import { Room } from '@/components/RoomCards';
-import RoomView from '@/components/RoomView';
+import RoomView from "@/components/RoomView";
 import { useEffect, useState } from 'react';
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../../../lib/firebaseConfig";
@@ -52,7 +52,7 @@ const handleSaveRoom = async (updatedRoom: Room) => {
 
         {roomData &&
         <div>
-        <RoomView {...roomData} />
+        <RoomView data={roomData} />
         <EditRoomsDataSection data={roomData} onSave={handleSaveRoom} />
         </div>
         
