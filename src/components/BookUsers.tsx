@@ -65,6 +65,7 @@ export default function BookUser({
     idnumber: "",
     address: "",
     gst: "",
+    state: "",
     bookingDate: new Date()
   });
 
@@ -100,6 +101,7 @@ export default function BookUser({
       checkOutTime,
       totalAmount,
       paidAmount,
+      state
     } = formData;
 
     if (
@@ -112,12 +114,14 @@ export default function BookUser({
       !checkInTime ||
       !checkOutDate ||
       !checkOutTime ||
-      !totalAmount
+      !totalAmount ||
+      !state
     ) {
       return alert("Please fill in all required fields.");
     }
 
     try {
+      const mergedAddress = `${address}, ${state}`.trim();
       // Step 1: Create user with phone number as document ID
       const userRef = doc(db, "users", phone);
       await setDoc(userRef, {
@@ -126,7 +130,8 @@ export default function BookUser({
         idtype,
         idnumber,
         gst: gst || null,
-        address,
+        mergedAddress,
+        state,
         user_id: phone,
         createdAt: new Date(),
       });
@@ -440,8 +445,57 @@ export default function BookUser({
             className="w-full border px-3 py-2 rounded bg-black text-white"
           />
         </div>
+{/* States */}
+<div className="space-y-1">
+  <label htmlFor="state" className="block text-sm font-medium">State</label>
+  <select
+    id="state"
+    value={formData.state}
+    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+    className="w-full h-10 border px-4 py-2 rounded bg-black text-white"
+  >
+    <option value="">Select State</option>
+    <option value="Andhra Pradesh">Andhra Pradesh</option>
+    <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+    <option value="Assam">Assam</option>
+    <option value="Bihar">Bihar</option>
+    <option value="Chhattisgarh">Chhattisgarh</option>
+    <option value="Goa">Goa</option>
+    <option value="Gujarat">Gujarat</option>
+    <option value="Haryana">Haryana</option>
+    <option value="Himachal Pradesh">Himachal Pradesh</option>
+    <option value="Jharkhand">Jharkhand</option>
+    <option value="Karnataka">Karnataka</option>
+    <option value="Kerala">Kerala</option>
+    <option value="Madhya Pradesh">Madhya Pradesh</option>
+    <option value="Maharashtra">Maharashtra</option>
+    <option value="Manipur">Manipur</option>
+    <option value="Meghalaya">Meghalaya</option>
+    <option value="Mizoram">Mizoram</option>
+    <option value="Nagaland">Nagaland</option>
+    <option value="Odisha">Odisha</option>
+    <option value="Punjab">Punjab</option>
+    <option value="Rajasthan">Rajasthan</option>
+    <option value="Sikkim">Sikkim</option>
+    <option value="Tamil Nadu">Tamil Nadu</option>
+    <option value="Telangana">Telangana</option>
+    <option value="Tripura">Tripura</option>
+    <option value="Uttar Pradesh">Uttar Pradesh</option>
+    <option value="Uttarakhand">Uttarakhand</option>
+    <option value="West Bengal">West Bengal</option>
+    <option value="Andaman and Nicobar Islands">Andaman and Nicobar Islands</option>
+    <option value="Chandigarh">Chandigarh</option>
+    <option value="Dadra and Nagar Haveli and Daman and Diu">Dadra and Nagar Haveli and Daman and Diu</option>
+    <option value="Delhi">Delhi</option>
+    <option value="Jammu and Kashmir">Jammu and Kashmir</option>
+    <option value="Ladakh">Ladakh</option>
+    <option value="Lakshadweep">Lakshadweep</option>
+    <option value="Puducherry">Puducherry</option>
+  </select>
+</div>
+
         {/* Address */}
-        <div className="space-y-1 col-span-3">
+        <div className="space-y-1 col-span-2">
           <label htmlFor="address" className="block text-sm font-medium">Address</label>
           <input
             id="address"

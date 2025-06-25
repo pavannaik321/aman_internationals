@@ -10,6 +10,8 @@ interface CustomerData {
   idnumber?: string;
   idtype?: string;
   address?: string;
+  mergedAddress?: string;
+  state?: string;
 }
 
 
@@ -369,7 +371,7 @@ margin-bottom:80px;
         <div>
           <p><strong>Invoice No:</strong> 553</p>
           <p><strong>Guest Name:</strong> ${customer?.name}</p>
-          <p><strong>Address:</strong> ${customer?.address}</p>
+          <p><strong>Address:</strong> ${customer?.mergedAddress || "-"}</p>
           <p><strong>Mobile No:</strong> ${customer?.idnumber}</p>
         </div>
         <div>
@@ -399,10 +401,15 @@ margin-bottom:80px;
                 <th>Amount</th>
                 <th>Disc</th>
                 <th>Taxable Value</th>
-                <th>CGST %</th>
+                ${
+                customer?.state === "Karnataka" ? `<th>IGST %</th>
+                <th>Amt.</th>
+                <th>IGST %</th>
+                <th>Amt.</th>` : `<th>CGST %</th>
                 <th>Amt.</th>
                 <th>SGST %</th>
-                <th>Amt.</th>
+                <th>Amt.</th>`}
+    
                 <th>Total Rs.</th>
             </tr>
         </thead>
@@ -618,7 +625,7 @@ margin-bottom:80px;
         <p><span className="text-gray-400">Check-In Time:</span> {booking.checkintime.toDate().toLocaleString()}</p>
         <p><span className="text-gray-400">Check-Out Time:</span> {booking.checkouttime.toDate().toLocaleString()}</p>
         <p><span className="text-gray-400">Room Number:</span> {booking.roomnumber}</p>
-        <p><span className="text-gray-400">Address:</span> {customer.address || "-"}</p>
+        <p><span className="text-gray-400">Address:</span> {customer.mergedAddress || "-"}</p>
         <p><span className="text-gray-400">Total Amount:</span> ₹{booking.totalamount}</p>
         <p><span className="text-gray-400">Paid Amount:</span> ₹{booking.amountpaid}</p>
         <p><span className="text-gray-400">Due:</span> ₹{booking.totalamount - booking.amountpaid}</p>
