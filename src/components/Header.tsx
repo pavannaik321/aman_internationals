@@ -12,6 +12,7 @@ export default function Header() {
       <div className="text-2xl font-bold text-gray-800">Aman Internationals</div>
       <nav className="flex space-x-8 text-lg">
         {/* <Link href="/" className={currentPath=='/'?`text-black`:`text-gray-500 font-medium`}>Dashborad</Link> */}
+        <Link href="/user" className={currentPath=='/user'?`text-black`:`text-gray-500 font-medium`}>User</Link>
         <Link href="/" className={currentPath=='/'?`text-black`:`text-gray-500 font-medium`}>Bookings</Link>
         <Link href="/checkin" className={currentPath=='/checkin'?`text-black`:`text-gray-500 font-medium`}>Check-in</Link>
         <Link href="/bulkbooking" className={currentPath=='/bulkbooking'?`text-black`:`text-gray-500 font-medium`}>Bulk Booking</Link>
