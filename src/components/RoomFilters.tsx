@@ -40,23 +40,104 @@ export default function RoomFilters() {
             <div className="flex flex-row items-center justify-between w-full">
 
                 {/* Date Picker */}
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={() => changeDate(-1)}
-                        className="border rounded p-1 text-gray-500 hover:bg-gray-100"
+                <div className="w-full max-w-[280px] bg-white p-2 rounded-lg shadow text-center text-xs">
+                    {/* Header with Dropdowns */}
+                <div className="flex items-center justify-between mb-2">
+                <button
+                onClick={() => changeDate(-1)}
+                className="border rounded px-1 py-0 text-gray-500 hover:bg-gray-100"
+                >
+                <ChevronLeft size={12} />
+                </button>
+                <div className="flex items-center gap-1">
+                <select
+                value={selectedDate.getMonth()}
+                onChange={(e) => {
+                const newDate = new Date(selectedDate);
+                newDate.setMonth(parseInt(e.target.value));
+                setSelectedDate(newDate);
+                }}
+                className="text-gray-700 border rounded px-1 py-0 bg-white text-xs"
+                >
+                {[
+                "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+                ].map((month, idx) => (
+                <option key={month} value={idx}>
+                {month}
+                </option>
+                ))}
+                 </select>
+                    <select
+                        value={selectedDate.getFullYear()}
+                        onChange={(e) => {
+                            const newDate = new Date(selectedDate);
+                            newDate.setFullYear(parseInt(e.target.value));
+                            setSelectedDate(newDate);
+                        }}
+                        className="text-gray-700 border rounded px-1 py-0 bg-white text-xs"
+                        >
+                        {Array.from({ length: 50 }, (_, i) => 2000 + i).map((year) => (
+                        <option key={year} value={year}>
+                             {year}
+                            </option>
+                            ))}
+                         </select>
+                         </div>
+
+                        <button
+                    onClick={() => changeDate(1)}
+                    className="border rounded px-1 py-0 text-gray-500 hover:bg-gray-100"
                     >
-                        <ChevronLeft size={16} />
+                    <ChevronRight size={12} />
                     </button>
-                    <span className="text-gray-700 font-medium">
-                        {formatDate(selectedDate)} <span className="text-black">Today</span>
-                    </span>
-                    <button
-                        onClick={() => changeDate(1)}
-                        className="border rounded p-1 text-gray-500 hover:bg-gray-100"
-                    >
-                        <ChevronRight size={16} />
-                    </button>
-                </div>
+                     </div>
+
+                    {/* Days of Week */}
+                    <div className="grid grid-cols-7 text-[10px] font-medium text-gray-700 mb-1 leading-none">
+                    {["S", "M", "T", "W", "T", "F", "S"].map((day, idx) => (
+                    <div key={idx} className={day === "S" ? "text-red-500" : ""}>
+                    {day}
+                    </div>
+                     ))}
+                    </div>
+
+                        {/* Dates Grid */}
+                        <div className="grid grid-cols-7 text-[11px] leading-none">
+                        {
+                        Array.from({
+                        length: new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1).getDay(),
+                        }).map((_, i) => <div key={`empty-${i}`} />)
+                        }
+                        {
+                        Array.from({
+                        length: new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0).getDate(),
+                        }).map((_, i) => {
+        const day = i + 1;
+        const isSelected = selectedDate.getDate() === day;
+
+        return (
+          <div
+            key={day}
+            onClick={() => {
+              const newDate = new Date(selectedDate);
+              newDate.setDate(day);
+              setSelectedDate(newDate);
+            }}
+            className={`cursor-pointer m-[2px] rounded-full w-5 h-5 flex items-center justify-center 
+              ${
+                isSelected
+                  ? "bg-yellow-500 text-white font-bold"
+                  : "text-gray-800 hover:bg-gray-200"
+              }`}
+          >
+            {day}
+          </div>
+         );
+        })
+         }
+        </div>
+        </div>
 
                 {/* Room Type */}
                 {/* <div className="relative inline-block">
