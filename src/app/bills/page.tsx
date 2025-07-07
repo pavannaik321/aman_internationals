@@ -67,9 +67,10 @@ export default function Page() {
   const downloadExcel = () => {
     const rows = filteredBills.map(bill => {
       const isIntraState = bill.state === businessState
-      const cgst = isIntraState ? '0.00' : (bill.totalAmount * 0.06).toFixed(2)
-      const sgst = isIntraState ? '0.00' : (bill.totalAmount * 0.06).toFixed(2)
-      const igst = isIntraState ? (bill.totalAmount * 0.12).toFixed(2) : '0.00'
+         const cgst = isIntraState ? (bill.totalAmount * 0.06).toFixed(2) : '0.00'
+              const sgst = isIntraState ? (bill.totalAmount * 0.06).toFixed(2) : '0.00'
+              const igst = isIntraState ? '0.00' : (bill.totalAmount * 0.12).toFixed(2)
+
 
       return {
         Date: bill.datePrinted.toLocaleDateString(),
