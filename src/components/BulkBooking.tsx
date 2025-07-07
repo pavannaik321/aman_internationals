@@ -32,6 +32,7 @@ export interface BookingData {
   checkinstatus: boolean;
   checkintime: Timestamp;
   checkouttime: Timestamp;
+  printId: string;
   roomnumber: number;
   roomtype: DocumentReference;
   totalamount: number;
@@ -71,6 +72,7 @@ export default function BulkRoomBooking({
     address: "",
     bulkName: "",
     gst: "",
+     state: "",
     bookingDate: new Date()
   });
 
@@ -109,7 +111,8 @@ export default function BulkRoomBooking({
       checkOutTime,
       totalAmount,
       paidAmount,
-      bulkName
+      bulkName,
+      state
     } = formData;
 
     if (
@@ -123,12 +126,14 @@ export default function BulkRoomBooking({
       !checkOutDate ||
       !checkOutTime ||
       !totalAmount ||
-      !bulkName
+      !bulkName ||
+      !state
     ) {
       return alert("Please fill in all required fields.");
     }
 
     try {
+           const mergedAddress = `${address}, ${state}`.trim();
       // 1. Create the user doc
       const userRef = doc(db, "users", phone);
       await setDoc(userRef, {
@@ -137,7 +142,7 @@ export default function BulkRoomBooking({
         idtype,
         idnumber,
         gst: gst || null,
-        address,
+        mergedAddress,
         user_id: phone,
         createdAt: new Date(),
       });
@@ -158,6 +163,7 @@ export default function BulkRoomBooking({
           bookingstatus: "booked",
           checkinstatus: false,
           checkintime: checkinTimestamp,
+          printId: "",
           checkouttime: checkoutTimestamp,
           roomnumber: r.number,
           roomtype: doc(db, "roomtypes", r.roomCategoryId),
@@ -214,6 +220,7 @@ export default function BulkRoomBooking({
       }
 
       alert("All rooms booked successfully for the user!");
+      onClose()
     } catch (err) {
       console.error("Error during booking:", err);
       alert("Failed to complete booking.");
@@ -273,6 +280,7 @@ export default function BulkRoomBooking({
           roomnumber: r.number,
           roomtype: doc(db, "roomtypes", r.roomCategoryId),
           totalamount: Number(totalAmount),
+          printId: "",
           user_id: userRef,
         };
 
@@ -663,7 +671,8 @@ export default function BulkRoomBooking({
         }
         {/* Address */}
         {(!isAlreadyBulkBooked) &&
-          <div className="space-y-1 col-span-2">
+        <>
+          <div className="space-y-1">
             <label htmlFor="address" className="block text-sm font-medium">Address</label>
             <input
               id="address"
@@ -673,6 +682,54 @@ export default function BulkRoomBooking({
               className="w-full border px-3 py-2 rounded bg-black text-white"
             />
           </div>
+<div className="space-y-1">
+  <label htmlFor="state" className="block text-sm font-medium">State</label>
+  <select
+    id="state"
+    value={formData.state}
+    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+    className="w-full h-10 border px-4 py-2 rounded bg-black text-white"
+  >
+    <option value="">Select State</option>
+    <option value="Andhra Pradesh">Andhra Pradesh</option>
+    <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+    <option value="Assam">Assam</option>
+    <option value="Bihar">Bihar</option>
+    <option value="Chhattisgarh">Chhattisgarh</option>
+    <option value="Goa">Goa</option>
+    <option value="Gujarat">Gujarat</option>
+    <option value="Haryana">Haryana</option>
+    <option value="Himachal Pradesh">Himachal Pradesh</option>
+    <option value="Jharkhand">Jharkhand</option>
+    <option value="Karnataka">Karnataka</option>
+    <option value="Kerala">Kerala</option>
+    <option value="Madhya Pradesh">Madhya Pradesh</option>
+    <option value="Maharashtra">Maharashtra</option>
+    <option value="Manipur">Manipur</option>
+    <option value="Meghalaya">Meghalaya</option>
+    <option value="Mizoram">Mizoram</option>
+    <option value="Nagaland">Nagaland</option>
+    <option value="Odisha">Odisha</option>
+    <option value="Punjab">Punjab</option>
+    <option value="Rajasthan">Rajasthan</option>
+    <option value="Sikkim">Sikkim</option>
+    <option value="Tamil Nadu">Tamil Nadu</option>
+    <option value="Telangana">Telangana</option>
+    <option value="Tripura">Tripura</option>
+    <option value="Uttar Pradesh">Uttar Pradesh</option>
+    <option value="Uttarakhand">Uttarakhand</option>
+    <option value="West Bengal">West Bengal</option>
+    <option value="Andaman and Nicobar Islands">Andaman and Nicobar Islands</option>
+    <option value="Chandigarh">Chandigarh</option>
+    <option value="Dadra and Nagar Haveli and Daman and Diu">Dadra and Nagar Haveli and Daman and Diu</option>
+    <option value="Delhi">Delhi</option>
+    <option value="Jammu and Kashmir">Jammu and Kashmir</option>
+    <option value="Ladakh">Ladakh</option>
+    <option value="Lakshadweep">Lakshadweep</option>
+    <option value="Puducherry">Puducherry</option>
+  </select>
+</div>
+</>
         }
         {/* Bulk Name */}
         <div className="space-y-1">

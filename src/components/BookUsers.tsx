@@ -28,6 +28,7 @@ export interface Room {
 export interface BookingData {
   amountpaid: number;
   bookingstatus: string;
+  printId:string;
   checkinstatus: boolean;
   checkintime: Timestamp;
   checkouttime: Timestamp;
@@ -147,6 +148,7 @@ export default function BookUser({
         checkinstatus: false,
         checkintime: checkinTimestamp,
         checkouttime: checkoutTimestamp,
+        printId: "",
         roomnumber: room.number,
         roomtype: doc(db, "roomtypes", room.roomCategoryId),
         totalamount: Number(totalAmount),

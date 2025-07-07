@@ -1,8 +1,28 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { doc, getDoc, DocumentReference, Timestamp } from "firebase/firestore";
+import { doc, getDoc, DocumentReference, Timestamp,collection, addDoc ,runTransaction, updateDoc } from "firebase/firestore";
 import { db } from "../../lib/firebaseConfig";
+
+
+const getNextInvoiceNumber = async () => {
+  const counterRef = doc(db, "counters", "prints");
+
+  const newInvoiceNumber = await runTransaction(db, async (transaction) => {
+    const counterDoc = await transaction.get(counterRef);
+    if (!counterDoc.exists()) {
+      throw new Error("Counter document does not exist!");
+    }
+
+    const current = counterDoc.data().lastInvoiceNumber || 510;
+    const next = current + 1;
+
+    transaction.update(counterRef, { lastInvoiceNumber: next });
+    return next;
+  });
+
+  return newInvoiceNumber;
+};
 
 interface CustomerData {
   name: string;
@@ -25,6 +45,7 @@ interface BookingData {
   bookingstatus: string;
   checkinstatus: boolean;
   roomtype: DocumentReference;
+  printId:string;
 }
 
 
@@ -45,9 +66,75 @@ export default function CustomerCard({
 }) {
   const [customer, setCustomer] = useState<CustomerData | null>(null);
   const [booking, setBooking] = useState<BookingData | null>(null);
+  const [index, setBookingIndex] = useState<number >(-1);
 
 
-  const handlePrint = (booking: BookingData) => {
+  const handlePrint = async(booking: BookingData) => {
+let invoiceData;
+let invoiceNumber;
+
+if (booking.printId!== "") {
+  // Fetch the print document using the stored printId
+  const printRef = doc(db, "prints", booking.printId);
+  const printSnap = await getDoc(printRef);
+
+  if (printSnap.exists()) {
+    invoiceData = printSnap.data();
+    invoiceNumber = invoiceData.invoiceNumber;
+    console.log("Using existing invoice:", invoiceNumber);
+  } else {
+    alert("Print record missing even though ID is stored.");
+    return;
+  }
+} else {
+  // No print ID stored → generate and store new invoice
+  invoiceNumber = await getNextInvoiceNumber();
+
+  invoiceData = {
+    invoiceNumber,
+    state:customer?.state || "",
+    customerId,
+    customerName: customer?.name,
+    roomNumber: booking.roomnumber,
+    roomType,
+    totalAmount: booking.totalamount,
+    amountPaid: booking.amountpaid,
+    checkin: booking.checkintime.toDate(),
+    checkout: booking.checkouttime.toDate(),
+    datePrinted: new Date(),
+    address: customer?.mergedAddress || "",
+  };
+
+try {
+  const dateKey = date;
+  const roomDateRef = doc(db, "room_dates", dateKey);
+
+  // Create the print document
+  const printDocRef = await addDoc(collection(db, "prints"), invoiceData);
+
+  // Update the specific booking at index
+  const roomDateSnap = await getDoc(roomDateRef);
+  if (!roomDateSnap.exists()) {
+    alert("Room date record not found.");
+    return;
+  }
+
+  const bookings = roomDateSnap.data().bookings;
+
+  // Set printId for specific index
+  bookings[index].printId = printDocRef.id;
+
+  // Write back the entire bookings array
+  await updateDoc(roomDateRef, { bookings });
+
+  console.log("New invoice stored with number:", invoiceNumber);
+} catch (error) {
+  console.error("Error storing invoice:", error);
+  alert("Failed to store invoice.");
+}
+
+}
+
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
     function numberToWords(num: number): string {
@@ -134,24 +221,6 @@ const formatDateTime = (timestamp: Timestamp) => {
 // Example usage with Firebase Timestamp fields
 const { formattedDate: checkinDate, formattedTime: checkinTime } = formatDateTime(booking.checkintime);
 const { formattedDate: checkoutDate, formattedTime: checkoutTime } = formatDateTime(booking.checkouttime);
-
-
-
-    //   const roomRows = booking.rooms.map((room, index) => `
-    //     <tr>
-    //       <td>${index + 1}</td>
-    //       <td>Room ${room.number}</td>
-    //       <td>996311</td>
-    //       <td>--</td>
-    //       <td>--</td>
-    //       <td>--</td>
-    //       <td>--</td>
-    //       <td>--</td>
-    //       <td>--</td>
-    //       <td>--</td>
-    //       <td>--</td>
-    //     </tr>
-    //   `).join('');
 
     printWindow.document.write(`
     <!DOCTYPE html>
@@ -369,7 +438,7 @@ margin-bottom:80px;
 
       <div class="details">
         <div>
-          <p><strong>Invoice No:</strong> 553</p>
+          <p><strong>Invoice No:</strong> ${invoiceNumber}</p>
           <p><strong>Guest Name:</strong> ${customer?.name}</p>
           <p><strong>Address:</strong> ${customer?.mergedAddress || "-"}</p>
           <p><strong>Mobile No:</strong> ${customer?.idnumber}</p>
@@ -573,6 +642,13 @@ margin-bottom:80px;
           const userBooking = bookings.find(
             (b) => b.user_id.id === customerId && b.roomnumber === roomNumber
           );
+          // finding index of booking
+          const bookingIndex = bookings.findIndex(
+  (b) => b.user_id.id === customerId && b.roomnumber === roomNumber
+);
+if (bookingIndex != -1) {
+setBookingIndex(bookingIndex);
+}
 
           if (userBooking) {
             setBooking(userBooking);
