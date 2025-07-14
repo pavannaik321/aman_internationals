@@ -70,6 +70,7 @@ export default function Page() {
     const rows = filteredBills.map((bill, index) => {
       const isIntraState = bill.state === businessState
       const cgst = isIntraState ? (bill.totalAmount * 0.06).toFixed(2) : ''
+      const sgst = isIntraState ? (bill.totalAmount * 0.06).toFixed(2) : ''
       const igst = isIntraState ? '' : (bill.totalAmount * 0.12).toFixed(2)
 
       return {
@@ -83,6 +84,7 @@ export default function Page() {
         "2.5% SGST": '-',
         "12% GST": '-',
         "6% CGST": cgst || '-',
+        "6% SGST": sgst || '-',
         "18% GST": '-',
         "9% CGST": '-',
         "9% SGST": '-',
@@ -153,7 +155,7 @@ export default function Page() {
             <tr>
               {[
                 'S.No', 'Date', 'Invoice No', 'Company Name', 'GST No', '5% GST', '2.5% CGST', '2.5% SGST',
-                '12% GST', '6% CGST', '18% GST', '9% CGST', '9% SGST', '5% IGST','5% IGST 2', '12% IGST',
+                '12% GST', '6% CGST','6% SGST', '18% GST', '9% CGST', '9% SGST', '5% IGST','5% IGST 2', '12% IGST',
                 '12% IGST 2', '18% IGST', '18% IGST 2', 'Total (amount)'
               ].map((col, i) => (
                 <th key={i} className="border px-2 py-1 whitespace-nowrap">{col}</th>
@@ -164,6 +166,7 @@ export default function Page() {
             {filteredBills.map((bill, index) => {
               const isIntraState = bill.state === businessState
               const cgst = isIntraState ? (bill.totalAmount * 0.06).toFixed(2) : '-'
+              const sgst = isIntraState ? (bill.totalAmount * 0.06).toFixed(2) : '-'
               const igst = isIntraState ? '-' : (bill.totalAmount * 0.12).toFixed(2)
 
               return (
@@ -178,6 +181,7 @@ export default function Page() {
                   <td className="border px-2 py-1">-</td>
                   <td className="border px-2 py-1">-</td>
                   <td className="border px-2 py-1">{cgst}</td>
+                  <td className="border px-2 py-1">{sgst}</td>
                   <td className="border px-2 py-1">-</td>
                   <td className="border px-2 py-1">-</td>
                   <td className="border px-2 py-1">-</td>
