@@ -87,6 +87,7 @@ export default function Page() {
         "9% CGST": '-',
         "9% SGST": '-',
         "5% IGST": '-',
+        "5% IGST 2": '-',
         "12% IGST": igst || '-',
         "12% IGST 2": '-',
         "18% IGST": '-',
@@ -152,7 +153,7 @@ export default function Page() {
             <tr>
               {[
                 'S.No', 'Date', 'Invoice No', 'Company Name', 'GST No', '5% GST', '2.5% CGST', '2.5% SGST',
-                '12% GST', '6% CGST', '18% GST', '9% CGST', '9% SGST', '5% IGST', '12% IGST',
+                '12% GST', '6% CGST', '18% GST', '9% CGST', '9% SGST', '5% IGST','5% IGST 2', '12% IGST',
                 '12% IGST 2', '18% IGST', '18% IGST 2', 'Total (amount)'
               ].map((col, i) => (
                 <th key={i} className="border px-2 py-1 whitespace-nowrap">{col}</th>
@@ -177,6 +178,7 @@ export default function Page() {
                   <td className="border px-2 py-1">-</td>
                   <td className="border px-2 py-1">-</td>
                   <td className="border px-2 py-1">{cgst}</td>
+                  <td className="border px-2 py-1">-</td>
                   <td className="border px-2 py-1">-</td>
                   <td className="border px-2 py-1">-</td>
                   <td className="border px-2 py-1">-</td>
