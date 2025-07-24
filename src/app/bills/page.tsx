@@ -159,7 +159,7 @@ export default function Page() {
             <tr>
               {[
                 'S.No', 'Date', 'Invoice No', 'Company Name', 'GST No' , 'State', '5% VALUE', 'CGST 2.5%', 'SGST 2.5%',
-                '12% VALUE', 'CGST 6%','SGST 6%', '5% IGST VAlUE','5% IGST', '12% VALUE2',
+                '12% VALUE', 'CGST 6%','SGST 6%','18% GST','9% CGST','9% SGST', '5% IGST VAlUE','5% IGST', '12% VALUE2',
                 '12% IGST', '18% IGST VALUE', '18% IGST', 'Total (amount)'
               ].map((col, i) => (
                 <th key={i} className="border px-2 py-1 whitespace-nowrap">{col}</th>
