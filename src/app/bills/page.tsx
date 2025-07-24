@@ -89,9 +89,9 @@ export default function Page() {
         "12% VALUE": value_12_cgst_sgst,
         "CGST 6%": cgst || '-',
         "SGST 6%": sgst || '-',
-        // "18% GST": '-',
-        // "9% CGST": '-',
-        // "9% SGST": '-',
+        "18% GST": '-',
+        "9% CGST": '-',
+        "9% SGST": '-',
         "5% IGST VALUE": '-',
         "5% IGST": '-',
         "12% VALUE2": value_12_igst,
@@ -193,9 +193,9 @@ export default function Page() {
                   <td className="border px-2 py-1">{value_12_cgst_sgst}</td>
                   <td className="border px-2 py-1">{cgst}</td>
                   <td className="border px-2 py-1">{sgst}</td>
-                  {/* <td className="border px-2 py-1">-</td> */}
-                  {/* <td className="border px-2 py-1">-</td> */}
-                  {/* <td className="border px-2 py-1">-</td> */}
+                  <td className="border px-2 py-1">-</td>
+                  <td className="border px-2 py-1">-</td>
+                  <td className="border px-2 py-1">-</td>
                   <td className="border px-2 py-1">-</td>
                   <td className="border px-2 py-1">-</td>
                   <td className="border px-2 py-1">{value_12_igst}</td>
