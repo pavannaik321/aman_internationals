@@ -72,26 +72,30 @@ export default function Page() {
       const cgst = isIntraState ? (bill.totalAmount * 0.06).toFixed(2) : ''
       const sgst = isIntraState ? (bill.totalAmount * 0.06).toFixed(2) : ''
       const igst = isIntraState ? '' : (bill.totalAmount * 0.12).toFixed(2)
-
+      const value_12_cgst_sgst = isIntraState
+      ? bill.totalAmount - (parseFloat(cgst) + parseFloat(sgst))
+      : '-';
+    const value_12_igst = !isIntraState ? bill.totalAmount - (parseFloat(igst)): '-';
       return {
         "S.No": index + 1,
         "Date": bill.datePrinted.toLocaleDateString(),
         "Invoice No": bill.invoiceNumber,
         "Company Name": bill.customerName,
         "GST No": '-',
-        "5% GST": '-',
-        "2.5% CGST": '-',
-        "2.5% SGST": '-',
-        "12% GST": '-',
-        "6% CGST": cgst || '-',
-        "6% SGST": sgst || '-',
-        "18% GST": '-',
-        "9% CGST": '-',
-        "9% SGST": '-',
+        "state":bill.state,
+        "5% VALUE": '-',
+        "CGST 2.5%": '-',
+        "SGST 2.5%": '-',
+        "12% VALUE": value_12_cgst_sgst,
+        "CGST 6%": cgst || '-',
+        "SGST 6%": sgst || '-',
+        // "18% GST": '-',
+        // "9% CGST": '-',
+        // "9% SGST": '-',
+        "5% IGST VALUE": '-',
         "5% IGST": '-',
-        "5% IGST 2": '-',
+        "12% VALUE2": value_12_igst,
         "12% IGST": igst || '-',
-        "12% IGST 2": '-',
         "18% IGST": '-',
         "18% IGST 2": '-',
         "Total (amount)": bill.totalAmount.toFixed(2)
@@ -154,9 +158,9 @@ export default function Page() {
           <thead className="bg-gray-100 text-gray-700">
             <tr>
               {[
-                'S.No', 'Date', 'Invoice No', 'Company Name', 'GST No', '5% GST', '2.5% CGST', '2.5% SGST',
-                '12% GST', '6% CGST','6% SGST', '18% GST', '9% CGST', '9% SGST', '5% IGST','5% IGST 2', '12% IGST',
-                '12% IGST 2', '18% IGST', '18% IGST 2', 'Total (amount)'
+                'S.No', 'Date', 'Invoice No', 'Company Name', 'GST No' , 'State', '5% VALUE', 'CGST 2.5%', 'SGST 2.5%',
+                '12% VALUE', 'CGST 6%','SGST 6%', '5% IGST VAlUE','5% IGST', '12% VALUE2',
+                '12% IGST', '18% IGST VALUE', '18% IGST', 'Total (amount)'
               ].map((col, i) => (
                 <th key={i} className="border px-2 py-1 whitespace-nowrap">{col}</th>
               ))}
@@ -168,7 +172,13 @@ export default function Page() {
               const cgst = isIntraState ? (bill.totalAmount * 0.06).toFixed(2) : '-'
               const sgst = isIntraState ? (bill.totalAmount * 0.06).toFixed(2) : '-'
               const igst = isIntraState ? '-' : (bill.totalAmount * 0.12).toFixed(2)
-
+              // cgst and sgst are strings if isIntraState, so need to parseFloat for arithmetic
+              // Ensure cgst, sgst, igst, and value_12 are shown up to 2 decimal places
+              // (cgst, sgst, igst are already .toFixed(2) or '-', so value_12 should be formatted)
+              const value_12_cgst_sgst = isIntraState
+                ? bill.totalAmount - (parseFloat(cgst) + parseFloat(sgst))
+                : '-';
+              const value_12_igst = !isIntraState ? bill.totalAmount - (parseFloat(igst)): '-';
               return (
                 <tr key={bill.id || index} className="text-center hover:bg-gray-50">
                   <td className="border px-2 py-1">{index + 1}</td>
@@ -176,19 +186,20 @@ export default function Page() {
                   <td className="border px-2 py-1">{bill.invoiceNumber}</td>
                   <td className="border px-2 py-1">{bill.customerName}</td>
                   <td className="border px-2 py-1">-</td>
+                  <td className="border px-2 py-1">{bill.state}</td>
                   <td className="border px-2 py-1">-</td>
                   <td className="border px-2 py-1">-</td>
                   <td className="border px-2 py-1">-</td>
-                  <td className="border px-2 py-1">-</td>
+                  <td className="border px-2 py-1">{value_12_cgst_sgst}</td>
                   <td className="border px-2 py-1">{cgst}</td>
                   <td className="border px-2 py-1">{sgst}</td>
+                  {/* <td className="border px-2 py-1">-</td> */}
+                  {/* <td className="border px-2 py-1">-</td> */}
+                  {/* <td className="border px-2 py-1">-</td> */}
                   <td className="border px-2 py-1">-</td>
                   <td className="border px-2 py-1">-</td>
-                  <td className="border px-2 py-1">-</td>
-                  <td className="border px-2 py-1">-</td>
-                  <td className="border px-2 py-1">-</td>
+                  <td className="border px-2 py-1">{value_12_igst}</td>
                   <td className="border px-2 py-1">{igst}</td>
-                  <td className="border px-2 py-1">-</td>
                   <td className="border px-2 py-1">-</td>
                   <td className="border px-2 py-1">-</td>
                   <td className="border px-2 py-1">₹{bill.totalAmount.toFixed(2)}</td>
