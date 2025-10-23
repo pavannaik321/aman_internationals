@@ -1,6 +1,4 @@
 // RoomCard.tsx
-
-
 import {
     SoapDispenserDroplet,
     LucideSoapDispenserDroplet,

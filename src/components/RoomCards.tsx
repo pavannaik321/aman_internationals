@@ -75,7 +75,8 @@ export default function RoomCards() {
           <Image
             width={300}
             height={200}
-            src={"/rooms/img1.png"}
+            // src={"/rooms/img1.png"}
+            src={room.images?.[0] || "/rooms/img1.png"}
             alt={room.category}
             className="w-full md:w-72 h-48 md:h-auto object-cover rounded-t-xl md:rounded-l-xl md:rounded-t-none p-4"
           />
